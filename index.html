@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>PRIME AI TRADING BOT | 300+ COINS | ULTIMATE SECURITY</title>
-    
-    <!-- Website Icon -->
-    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAGbSURBVHgB7ZbNTcMwGIXfE1unCJQJKqzAhoQJsAEbJCZgA8oGsEHiBIkTUCZgA9ggbJA4QeIEpUzQfFIlTmqQ5B+E1Ef60lfZsuWf72d/FmBf+9rX/wSgIT05+eRxhPq2juIqjVxMCY2jR0hIvmhVdU3y0pBcjz6gqm45A7TkiMl54pM/y2hF/q4xWYhF5mTjG6rqPidLjqoPqCqP7cDzHLPxr+QYq6o6T46qCagqG6sqT0w++WvLcZ6SoyqAqrK5quqKZF28ssSq3keOqg6oKbK6q1pPj/DXqOPeRIyqCqvI4BwDwPE9Vz1PVh2R+gOqCqoK6qx2oKqj7EGGqg6oK6q52oKqg7sOE6oOqgrqrHagqqPswYfqgqqDuageqCuo+TJg+qCqou9qBqoK6DxOmD6oK6q52oKqg7sOE6YOqgrqrHagqqPswYfqgqqDuageqCuo+TJg+qCqou9qBqoK6DxOmD6oK6q52oKqg7sOE6YOqgrqrHagqqPswYfqgqqDuageqCuo+TJg+qCqou9qBqoK6DxOmD6oK6q52oKqg7v8C/AsAAvzQj4cIrQYAAAAASUVORK5CYII=">
+    <title>PRIME AI TRADING BOT | ULTIMATE RECOMMENDATION SYSTEM</title>
     
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.2/dist/axios.min.js"></script>
@@ -119,321 +116,6 @@
             font-size: 2rem;
             z-index: 999999;
             animation: shake 0.5s ease infinite;
-        }
-        
-        /* ==================== NEW AI RECOMMENDATION BOX ==================== */
-        .ai-rec-box {
-            background: linear-gradient(135deg, #0F1422 0%, #1A1F33 100%);
-            border: 2px solid #3B82F6;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 25px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            animation: slideIn 0.5s ease;
-        }
-        
-        .ai-rec-box::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
-        }
-        
-        .ai-rec-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .ai-rec-header i {
-            font-size: 1.8rem;
-            color: #3B82F6;
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        .ai-rec-header h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #94A3B8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-        
-        .ai-rec-badge {
-            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: white;
-            margin-left: auto;
-        }
-        
-        .ai-rec-content {
-            display: grid;
-            grid-template-columns: 1fr 1.5fr 1fr;
-            gap: 20px;
-            position: relative;
-            z-index: 2;
-        }
-        
-        @media (max-width: 1200px) {
-            .ai-rec-content {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
-        
-        /* Support Zone */
-        .ai-rec-support {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid #22C55E;
-            border-radius: 16px;
-            padding: 15px;
-            transition: all 0.3s;
-        }
-        
-        .ai-rec-support:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
-        }
-        
-        .zone-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #22C55E;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-bottom: 10px;
-        }
-        
-        .zone-badge {
-            display: inline-block;
-            background: rgba(34, 197, 94, 0.2);
-            color: #22C55E;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            border: 1px solid #22C55E;
-        }
-        
-        .zone-badge.sell {
-            background: rgba(239, 68, 68, 0.2);
-            color: #EF4444;
-            border-color: #EF4444;
-        }
-        
-        .zone-price {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 10px;
-        }
-        
-        .zone-level {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .level-label {
-            color: #94A3B8;
-        }
-        
-        .level-value.low {
-            color: #22C55E;
-            font-weight: 600;
-        }
-        
-        .level-value.high {
-            color: #EF4444;
-            font-weight: 600;
-        }
-        
-        .zone-confidence {
-            margin: 10px 0;
-        }
-        
-        .conf-label {
-            color: #94A3B8;
-            font-size: 0.85rem;
-            display: block;
-            margin-bottom: 5px;
-        }
-        
-        .conf-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #22C55E;
-            display: inline-block;
-            margin-bottom: 5px;
-        }
-        
-        .conf-value.sell {
-            color: #EF4444;
-        }
-        
-        .conf-bar {
-            width: 100%;
-            height: 4px;
-            background: #1A1F33;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .conf-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #22C55E, #16A34A);
-            border-radius: 2px;
-            transition: width 0.5s;
-        }
-        
-        .conf-fill.sell {
-            background: linear-gradient(90deg, #EF4444, #DC2626);
-        }
-        
-        .zone-target {
-            font-size: 0.9rem;
-            color: #94A3B8;
-            margin-top: 10px;
-        }
-        
-        .zone-target i {
-            color: #22C55E;
-            margin-right: 5px;
-        }
-        
-        .zone-target.sell i {
-            color: #EF4444;
-        }
-        
-        .zone-target span {
-            color: #22C55E;
-            font-weight: 600;
-        }
-        
-        /* Resistance Zone */
-        .ai-rec-resistance {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #EF4444;
-            border-radius: 16px;
-            padding: 15px;
-            transition: all 0.3s;
-        }
-        
-        .ai-rec-resistance:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
-        }
-        
-        /* Chart Info */
-        .ai-rec-chart {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid #2A3045;
-            border-radius: 16px;
-            padding: 15px;
-        }
-        
-        .chart-info {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .info-item {
-            text-align: center;
-        }
-        
-        .info-label {
-            font-size: 0.7rem;
-            color: #94A3B8;
-            display: block;
-            margin-bottom: 3px;
-        }
-        
-        .info-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
-        }
-        
-        .info-value.positive {
-            color: #22C55E;
-        }
-        
-        .mini-chart {
-            height: 50px;
-            background: #1A1F33;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Footer */
-        .ai-rec-footer {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #2A3045;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-            z-index: 2;
-        }
-        
-        .action-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .action-status i {
-            font-size: 0.8rem;
-        }
-        
-        .action-status strong {
-            color: #22C55E;
-        }
-        
-        .action-button {
-            background: linear-gradient(135deg, #22C55E, #16A34A);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .action-button:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.3);
-        }
-        
-        .action-button i {
-            transition: transform 0.3s;
-        }
-        
-        .action-button:hover i {
-            transform: translateX(5px);
         }
         
         /* ==================== LOGIN PAGE ==================== */
@@ -2413,6 +2095,432 @@
             transform: scale(1.1);
         }
         
+        /* ==================== ULTIMATE RECOMMENDATION BOX ==================== */
+        .ultimate-rec-box {
+            background: linear-gradient(135deg, #0F1422 0%, #1A1F33 100%);
+            border: 2px solid #3B82F6;
+            border-radius: 24px;
+            padding: 20px;
+            margin: 25px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.5s ease;
+        }
+        
+        .ultimate-rec-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        .ultimate-rec-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header-left i {
+            font-size: 1.8rem;
+            color: #3B82F6;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .header-left h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        
+        .final-signal {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22C55E;
+            border-radius: 30px;
+            padding: 8px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .final-signal .signal-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #22C55E;
+        }
+        
+        .final-signal .signal-confidence {
+            background: #22C55E;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .ultimate-rec-content {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr 1.2fr;
+            gap: 20px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        @media (max-width: 1200px) {
+            .ultimate-rec-content {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+        
+        /* Support Zone */
+        .ult-support-zone {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid #22C55E;
+            border-radius: 20px;
+            padding: 18px;
+            transition: all 0.3s;
+        }
+        
+        .ult-support-zone:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(34, 197, 94, 0.2);
+        }
+        
+        .zone-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .zone-header i {
+            font-size: 1.2rem;
+            color: #22C55E;
+        }
+        
+        .zone-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #22C55E;
+        }
+        
+        .zone-badge {
+            display: inline-block;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22C55E;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border: 1px solid #22C55E;
+        }
+        
+        .entry-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .entry-price span {
+            color: #22C55E;
+            font-size: 0.9rem;
+            font-weight: normal;
+            margin-left: 8px;
+        }
+        
+        .level-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+        
+        .level-label {
+            color: #94A3B8;
+        }
+        
+        .level-value {
+            color: #22C55E;
+            font-weight: 600;
+        }
+        
+        .confidence-meter {
+            margin: 15px 0;
+        }
+        
+        .confidence-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: #1A1F33;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22C55E, #16A34A);
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+        
+        .target-box {
+            background: rgba(34, 197, 94, 0.05);
+            border: 1px solid #22C55E;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 15px 0;
+        }
+        
+        .target-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .target-label {
+            color: #94A3B8;
+        }
+        
+        .target-value {
+            color: #22C55E;
+            font-weight: 600;
+        }
+        
+        /* Resistance Zone */
+        .ult-resistance-zone {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #EF4444;
+            border-radius: 20px;
+            padding: 18px;
+            transition: all 0.3s;
+        }
+        
+        .ult-resistance-zone:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(239, 68, 68, 0.2);
+        }
+        
+        .ult-resistance-zone .zone-header i,
+        .ult-resistance-zone .zone-header h3 {
+            color: #EF4444;
+        }
+        
+        .ult-resistance-zone .zone-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+            border-color: #EF4444;
+        }
+        
+        .ult-resistance-zone .entry-price span {
+            color: #EF4444;
+        }
+        
+        .ult-resistance-zone .level-value {
+            color: #EF4444;
+        }
+        
+        .ult-resistance-zone .confidence-fill {
+            background: linear-gradient(90deg, #EF4444, #DC2626);
+        }
+        
+        .ult-resistance-zone .target-value {
+            color: #EF4444;
+        }
+        
+        /* Center Info */
+        .center-info {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #2A3045;
+            border-radius: 20px;
+            padding: 18px;
+        }
+        
+        .current-price-big {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .current-price-big .label {
+            font-size: 0.9rem;
+            color: #94A3B8;
+        }
+        
+        .current-price-big .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #3B82F6;
+            line-height: 1.2;
+        }
+        
+        .ai-signal-box {
+            background: #1A1F33;
+            border-radius: 16px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .ai-signal-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+        }
+        
+        .ai-signal-label {
+            color: #94A3B8;
+            font-size: 0.9rem;
+        }
+        
+        .ai-signal-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .ai-signal-value.buy { color: #22C55E; }
+        .ai-signal-value.sell { color: #EF4444; }
+        
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-box {
+            background: #1A1F33;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .stat-box .stat-label {
+            font-size: 0.75rem;
+            color: #94A3B8;
+            margin-bottom: 4px;
+        }
+        
+        .stat-box .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        /* Stop Loss Box */
+        .stop-loss-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #EF4444;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stop-loss-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #EF4444;
+            font-weight: 600;
+        }
+        
+        .stop-loss-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #EF4444;
+        }
+        
+        /* Action Footer */
+        .ultimate-rec-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #2A3045;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .current-zone-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .zone-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        
+        .zone-indicator i {
+            font-size: 0.8rem;
+        }
+        
+        .zone-name {
+            font-weight: 700;
+        }
+        
+        .trade-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .trade-action-btn {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .trade-action-btn.buy {
+            background: linear-gradient(135deg, #22C55E, #16A34A);
+            color: white;
+        }
+        
+        .trade-action-btn.sell {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+        }
+        
+        .trade-action-btn:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
         /* Signals Container */
         .signals-container {
             background: #0B0F1C;
@@ -2588,221 +2696,6 @@
             margin-top: 8px;
             display: flex;
             justify-content: flex-end;
-        }
-        
-        /* Recommendation Entry Box */
-        .recommendation-box {
-            background: linear-gradient(135deg, #0B0F1C 0%, #141B2B 100%);
-            border: 2px solid #3B82F6;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 20px;
-            position: relative;
-            overflow: hidden;
-            animation: glow 3s ease-in-out infinite;
-        }
-        
-        .recommendation-box::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
-            animation: rotate 20s linear infinite;
-        }
-        
-        .rec-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .rec-header i {
-            font-size: 1.5rem;
-            color: #F59E0B;
-        }
-        
-        .rec-header h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #94A3B8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .rec-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        @media (max-width: 768px) {
-            .rec-content {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
-        
-        .rec-support {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid #22C55E;
-            border-radius: 16px;
-            padding: 15px;
-            transition: all 0.3s;
-        }
-        
-        .rec-support:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.2);
-        }
-        
-        .rec-support .title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #22C55E;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        
-        .rec-support .price-range {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 5px;
-        }
-        
-        .rec-support .type {
-            font-size: 0.9rem;
-            color: #22C55E;
-            margin-bottom: 10px;
-        }
-        
-        .rec-support .breakout {
-            background: rgba(34, 197, 94, 0.2);
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: white;
-        }
-        
-        .rec-resistance {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid #EF4444;
-            border-radius: 16px;
-            padding: 15px;
-            transition: all 0.3s;
-        }
-        
-        .rec-resistance:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
-        }
-        
-        .rec-resistance .title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #EF4444;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        
-        .rec-resistance .price-range {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 5px;
-        }
-        
-        .rec-resistance .type {
-            font-size: 0.9rem;
-            color: #EF4444;
-            margin-bottom: 10px;
-        }
-        
-        .rec-resistance .breakout {
-            background: rgba(239, 68, 68, 0.2);
-            padding: 8px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            color: white;
-        }
-        
-        .rec-current {
-            grid-column: span 2;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid #3B82F6;
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 10px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        @media (max-width: 768px) {
-            .rec-current {
-                grid-column: span 1;
-            }
-        }
-        
-        .rec-current .status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .rec-current .zone {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-        
-        .rec-current .action {
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-weight: 600;
-        }
-        
-        .action-buy {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22C55E;
-            border: 1px solid #22C55E;
-        }
-        
-        .action-sell {
-            background: rgba(239, 68, 68, 0.2);
-            color: #EF4444;
-            border: 1px solid #EF4444;
-        }
-        
-        .action-wait {
-            background: rgba(245, 158, 11, 0.2);
-            color: #F59E0B;
-            border: 1px solid #F59E0B;
-        }
-        
-        .rec-targets {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 0.9rem;
-            color: #94A3B8;
-        }
-        
-        .rec-targets span {
-            color: #22C55E;
-            font-weight: 600;
         }
         
         /* AI Analytics */
@@ -3534,7 +3427,7 @@
                 });
                 
                 // Domain check - only allow specific domains
-                const allowedDomains = ['localhost', '127.0.0.1', ' https://aicryptobots.github.io/tradss/'];
+                const allowedDomains = ['localhost', '127.0.0.1', 'https://aicryptobots.github.io/tradss/2222.html'];
                 const currentDomain = window.location.hostname;
                 
                 if (!allowedDomains.includes(currentDomain) && !currentDomain.includes('github.io')) {
@@ -3772,97 +3665,28 @@
             <div class="prime-ticker" id="primeTicker">
                 <!-- Dynamic -->
             </div>
-            
-            <!-- ==================== NEW AI RECOMMENDATION BOX (PLACED HERE) ==================== -->
-            <div class="ai-rec-box" id="aiRecommendationBox">
-                <div class="ai-rec-header">
-                    <i class="fas fa-microchip"></i>
-                    <h2>AI RECOMMENDATION</h2>
-                    <span class="ai-rec-badge">v2.0</span>
-                </div>
-                
-                <div class="ai-rec-content">
-                    <!-- Left Side - Support Zone -->
-                    <div class="ai-rec-support">
-                        <div class="zone-title">
-                            <i class="fas fa-arrow-down"></i> SUPPORT ZONE
+         
+                <!-- Action Footer -->
+                <div class="ultimate-rec-footer">
+                    <div class="current-zone-status">
+                        <div class="zone-indicator">
+                            <i class="fas fa-circle" style="color: #22C55E;" id="zoneIndicator"></i>
+                            <span>Current Zone: <span class="zone-name" id="currentZoneName">SUPPORT</span></span>
                         </div>
-                        <div class="zone-badge">BUY</div>
-                        <div class="zone-price" id="aiSupportPrice">$66,763 - $66,800</div>
-                        <div class="zone-level">
-                            <span class="level-label">Level:</span>
-                            <span class="level-value low">LOW</span>
-                        </div>
-                        <div class="zone-confidence">
-                            <span class="conf-label">Confidence:</span>
-                            <span class="conf-value" id="supportConfidence">87%</span>
-                            <div class="conf-bar">
-                                <div class="conf-fill" id="supportConfBar" style="width:87%"></div>
-                            </div>
-                        </div>
-                        <div class="zone-target">
-                            <i class="fas fa-bullseye"></i> Target: <span id="supportTarget">$67,500 - $68,000</span>
+                        <div class="zone-indicator">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Best Action: <span class="zone-name" id="bestAction">BUY NOW</span></span>
                         </div>
                     </div>
-                    
-                    <!-- Middle - Chart Info -->
-                    <div class="ai-rec-chart">
-                        <div class="chart-info">
-                            <div class="info-item">
-                                <span class="info-label">Current</span>
-                                <span class="info-value" id="aiCurrentPrice">$66,793</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">24h Change</span>
-                                <span class="info-value positive" id="ai24hChange">+2.45%</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Volume</span>
-                                <span class="info-value" id="aiVolume">$0.25B</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">RSI</span>
-                                <span class="info-value" id="aiRSI">18.72</span>
-                            </div>
-                        </div>
-                        <div class="mini-chart" id="miniChart">
-                            <!-- Mini chart will be rendered here -->
-                        </div>
-                    </div>
-                    
-                    <!-- Right Side - Resistance Zone -->
-                    <div class="ai-rec-resistance">
-                        <div class="zone-title">
-                            <i class="fas fa-arrow-up"></i> RESISTANCE ZONE
-                        </div>
-                        <div class="zone-badge sell">SELL</div>
-                        <div class="zone-price" id="aiResistancePrice">$67,150 - $67,180</div>
-                        <div class="zone-level">
-                            <span class="level-label">Level:</span>
-                            <span class="level-value high">HIGH</span>
-                        </div>
-                        <div class="zone-confidence">
-                            <span class="conf-label">Confidence:</span>
-                            <span class="conf-value sell" id="resistanceConfidence">65%</span>
-                            <div class="conf-bar">
-                                <div class="conf-fill sell" id="resistanceConfBar" style="width:65%"></div>
-                            </div>
-                        </div>
-                        <div class="zone-target">
-                            <i class="fas fa-bullseye"></i> Target: <span id="resistanceTarget">$66,500 - $66,200</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Bottom - Action Status -->
-                <div class="ai-rec-footer">
-                    <div class="action-status">
-                        <i class="fas fa-circle" style="color: #22C55E;"></i>
-                        <span>Current Zone: <strong id="currentZoneName">SUPPORT</strong></span>
-                    </div>
-                    <div class="action-button" id="aiActionButton">
-                        <span>CONSIDER BUY</span>
-                        <i class="fas fa-arrow-right"></i>
+                    <div class="trade-actions">
+                        <button class="trade-action-btn buy" onclick="executeTrade('buy')">
+                            🟢 BUY NOW
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button class="trade-action-btn sell" onclick="executeTrade('sell')">
+                            🔴 SELL NOW
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -3926,11 +3750,11 @@
                         <div class="level-box">
                             <div class="level-item">
                                 <div class="level-label">Support</div>
-                                <div class="level-value support" id="supportLevel">$66,763</div>
+                                <div class="level-value support" id="supportLevel2">$66,763</div>
                             </div>
                             <div class="level-item">
                                 <div class="level-label">Resistance</div>
-                                <div class="level-value resistance" id="resistanceLevel">$67,180</div>
+                                <div class="level-value resistance" id="resistanceLevel2">$67,180</div>
                             </div>
                         </div>
                         
@@ -4028,57 +3852,144 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- RECOMMENDATION ENTRY BOX -->
-            <div class="recommendation-box" id="recommendationBox">
-                <div class="rec-header">
-                    <i class="fas fa-star"></i>
-                    <h2>RECOMMENDATION ENTRY</h2>
+            <!-- ==================== ULTIMATE RECOMMENDATION BOX ==================== -->
+            <div class="ultimate-rec-box" id="ultimateRecBox">
+                <div class="ultimate-rec-header">
+                    <div class="header-left">
+                        <i class="fas fa-microchip"></i>
+                        <h2>ULTIMATE TRADING RECOMMENDATION</h2>
+                    </div>
+                    <div class="final-signal" id="finalSignalBox">
+                        <span class="signal-text" id="finalSignal">BUY</span>
+                        <span class="signal-confidence" id="finalConfidence">87%</span>
+                    </div>
                 </div>
                 
-                <div class="rec-content">
-                    <div class="rec-support">
-                        <div class="title">
-                            <i class="fas fa-arrow-down"></i> SUPPORT ZONE (BUY)
+                <div class="ultimate-rec-content">
+                    <!-- Support Zone -->
+                    <div class="ult-support-zone">
+                        <div class="zone-header">
+                            <i class="fas fa-arrow-down"></i>
+                            <h3>SUPPORT ZONE</h3>
                         </div>
-                        <div class="price-range" id="supportRange">$66,763 - $66,800</div>
-                        <div class="type">Support is <span style="color:#22C55E; font-weight:600;">LOW</span> of range</div>
-                        <div class="breakout" id="breakoutUp">📈 Breakout Up: <span style="color:#22C55E;">75% chance</span></div>
-                        <div class="target" style="margin-top:8px; color:#94A3B8;">🎯 Target: <span style="color:#22C55E;" id="supportTarget2">$67,500 - $68,000</span></div>
+                        <div class="zone-badge">BUY RECOMMENDATION</div>
+                        <div class="entry-price">
+                            $66,763 - $66,800
+                            <span>(Entry Range)</span>
+                        </div>
+                        <div class="level-info">
+                            <span class="level-label">Level Position:</span>
+                            <span class="level-value" id="supportLevel">LOW (Support)</span>
+                        </div>
+                        <div class="confidence-meter">
+                            <div class="confidence-header">
+                                <span>Confidence</span>
+                                <span id="supportConfidence">87%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="supportConfBar" style="width:87%"></div>
+                            </div>
+                        </div>
+                        <div class="target-box">
+                            <div class="target-row">
+                                <span class="target-label">Target Price (TP):</span>
+                                <span class="target-value" id="supportTarget">$67,500 - $68,000</span>
+                            </div>
+                            <div class="target-row">
+                                <span class="target-label">Expected Profit:</span>
+                                <span class="target-value" id="supportProfit">+1.5% to +2.5%</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="rec-resistance">
-                        <div class="title">
-                            <i class="fas fa-arrow-up"></i> RESISTANCE ZONE (SELL)
+                    <!-- Center Info -->
+                    <div class="center-info">
+                        <div class="current-price-big">
+                            <div class="label">BTC/USDT Current Price</div>
+                            <div class="value" id="ultCurrentPrice">$66,793</div>
                         </div>
-                        <div class="price-range" id="resistanceRange">$67,150 - $67,180</div>
-                        <div class="type">Resistance is <span style="color:#EF4444; font-weight:600;">HIGH</span> of range</div>
-                        <div class="breakout" id="breakoutDown">📉 Breakout Down: <span style="color:#EF4444;">65% chance</span></div>
-                        <div class="target" style="margin-top:8px; color:#94A3B8;">🎯 Target: <span style="color:#EF4444;" id="resistanceTarget2">$66,500 - $66,200</span></div>
+                        
+                        <div class="ai-signal-box">
+                            <div class="ai-signal-row">
+                                <span class="ai-signal-label">AI Signal</span>
+                                <span class="ai-signal-value buy" id="ultAiSignal">BUY</span>
+                            </div>
+                            <div class="ai-signal-row">
+                                <span class="ai-signal-label">Confidence</span>
+                                <span class="ai-signal-value" id="ultConfidence">87%</span>
+                            </div>
+                            <div class="ai-signal-row">
+                                <span class="ai-signal-label">Patterns</span>
+                                <span class="ai-signal-value" id="ultPatterns">5B/2S</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mini-stats">
+                            <div class="stat-box">
+                                <div class="stat-label">RSI (14)</div>
+                                <div class="stat-value" id="ultRsi">18.72</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">Volume</div>
+                                <div class="stat-value" id="ultVolume">0.25B</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">24h Change</div>
+                                <div class="stat-value positive" id="ultChange">+2.45%</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-label">ATR</div>
+                                <div class="stat-value" id="ultAtr">198.07</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Stop Loss Box -->
+                        <div class="stop-loss-box" id="stopLossBox">
+                            <div class="stop-loss-label">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>STOP LOSS</span>
+                            </div>
+                            <div class="stop-loss-value" id="stopLossValue">$66,771</div>
+                        </div>
                     </div>
                     
-                    <div class="rec-current">
-                        <div class="status">
-                            <div>
-                                <span style="color:#94A3B8;">⚡ CURRENT ZONE:</span>
-                                <span class="zone" id="currentZone" style="color:#22C55E; margin-left:8px;">SUPPORT</span>
+                    <!-- Resistance Zone -->
+                    <div class="ult-resistance-zone">
+                        <div class="zone-header">
+                            <i class="fas fa-arrow-up"></i>
+                            <h3>RESISTANCE ZONE</h3>
+                        </div>
+                        <div class="zone-badge">SELL RECOMMENDATION</div>
+                        <div class="entry-price">
+                            $67,150 - $67,180
+                            <span>(Entry Range)</span>
+                        </div>
+                        <div class="level-info">
+                            <span class="level-label">Level Position:</span>
+                            <span class="level-value" id="resistanceLevel">HIGH (Resistance)</span>
+                        </div>
+                        <div class="confidence-meter">
+                            <div class="confidence-header">
+                                <span>Confidence</span>
+                                <span id="resistanceConfidence">65%</span>
                             </div>
-                            <div>
-                                <span style="color:#94A3B8;">Price:</span>
-                                <span style="color:white; font-weight:600; margin-left:5px;" id="currentZonePrice">$66,793</span>
-                            </div>
-                            <div>
-                                <span class="action action-buy" id="currentAction">CONSIDER BUY</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill sell" id="resistanceConfBar" style="width:65%"></div>
                             </div>
                         </div>
-                        <div class="rec-targets">
-                            <span>Support holds → Buy opportunity</span>
-                            <span>Resistance breaks → Sell opportunity</span>
+                        <div class="target-box">
+                            <div class="target-row">
+                                <span class="target-label">Target Price (TP):</span>
+                                <span class="target-value" id="resistanceTarget">$66,500 - $66,200</span>
+                            </div>
+                            <div class="target-row">
+                                <span class="target-label">Expected Profit:</span>
+                                <span class="target-value" id="resistanceProfit">-1.5% to -2.5%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
+                
             <!-- LIVE SIGNALS -->
             <div class="signals-container">
                 <div class="signal-header">
@@ -4423,16 +4334,16 @@
                     
                     <div class="step-card">
                         <div class="step-number">2</div>
-                        <h3>Check AI Signal</h3>
-                        <p>Look at AI SIGNAL (BUY/SELL) and CONFIDENCE level. High confidence (90%+) means strong signal. Audio alerts at 80% and 90%.</p>
-                        <div class="step-icon">🤖</div>
+                        <h3>Check Ultimate Box</h3>
+                        <p>Look at the ULTIMATE RECOMMENDATION box. It shows Support Zone, Resistance Zone, Current Price, AI Signal, Confidence, and Stop Loss all in one place.</p>
+                        <div class="step-icon">🎯</div>
                     </div>
                     
                     <div class="step-card">
                         <div class="step-number">3</div>
-                        <h3>Review TP & SL Levels</h3>
-                        <p>Each signal shows Entry Price, 4 Take Profit levels (TP1-TP4) and Stop Loss. This tells you exactly where to enter and exit.</p>
-                        <div class="step-icon">🎯</div>
+                        <h3>Review Entry & Targets</h3>
+                        <p>See exact entry range, target prices (TP), and stop loss. The box tells you whether to BUY (Support Zone) or SELL (Resistance Zone) with confidence level.</p>
+                        <div class="step-icon">📊</div>
                     </div>
                     
                     <div class="step-card">
@@ -4447,24 +4358,24 @@
                     <div class="feature-item">
                         <div class="feature-icon">🎯</div>
                         <div class="feature-text">
-                            <h4>Entry Price & TP Levels</h4>
-                            <p>Every signal shows exact entry price and 4 take profit targets (TP1-TP4)</p>
+                            <h4>All-in-One Box</h4>
+                            <p>Support, Resistance, Entry Price, Targets, Stop Loss - everything in one place</p>
                         </div>
                     </div>
                     
                     <div class="feature-item">
                         <div class="feature-icon">🛑</div>
                         <div class="feature-text">
-                            <h4>Stop Loss (SL)</h4>
-                            <p>Clear stop loss level to protect your capital from major losses</p>
+                            <h4>Clear Stop Loss</h4>
+                            <p>Always shows where to place stop loss to protect your capital</p>
                         </div>
                     </div>
                     
                     <div class="feature-item">
                         <div class="feature-icon">📊</div>
                         <div class="feature-text">
-                            <h4>Real-time P&L</h4>
-                            <p>See your profit/loss update in real-time for every open position</p>
+                            <h4>Real-time Confidence</h4>
+                            <p>See confidence % for both BUY and SELL recommendations</p>
                         </div>
                     </div>
                     
@@ -4590,7 +4501,6 @@
         
         // ==================== TOP 300+ CRYPTO COINS ====================
         const topCoins = [
-            // Top 10
             { symbol: 'BTC', name: 'Bitcoin', icon: '₿', color: '#F7931A', binanceSymbol: 'BTCUSDT' },
             { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627EEA', binanceSymbol: 'ETHUSDT' },
             { symbol: 'BNB', name: 'Binance Coin', icon: 'BNB', color: '#F3BA2F', binanceSymbol: 'BNBUSDT' },
@@ -4601,8 +4511,6 @@
             { symbol: 'DOGE', name: 'Dogecoin', icon: 'Ð', color: '#C2A633', binanceSymbol: 'DOGEUSDT' },
             { symbol: 'DOT', name: 'Polkadot', icon: 'DOT', color: '#E6007A', binanceSymbol: 'DOTUSDT' },
             { symbol: 'TRX', name: 'TRON', icon: 'TRX', color: '#EF0027', binanceSymbol: 'TRXUSDT' },
-            
-            // Top 20
             { symbol: 'LINK', name: 'Chainlink', icon: 'LINK', color: '#2A5ADA', binanceSymbol: 'LINKUSDT' },
             { symbol: 'MATIC', name: 'Polygon', icon: 'MATIC', color: '#8247E5', binanceSymbol: 'MATICUSDT' },
             { symbol: 'ICP', name: 'Internet Computer', icon: 'ICP', color: '#29ABE2', binanceSymbol: 'ICPUSDT' },
@@ -4613,8 +4521,6 @@
             { symbol: 'ETC', name: 'Ethereum Classic', icon: 'ETC', color: '#33FF99', binanceSymbol: 'ETCUSDT' },
             { symbol: 'XLM', name: 'Stellar', icon: 'XLM', color: '#000000', binanceSymbol: 'XLMUSDT' },
             { symbol: 'BCH', name: 'Bitcoin Cash', icon: 'BCH', color: '#8DC351', binanceSymbol: 'BCHUSDT' },
-            
-            // Top 30
             { symbol: 'FIL', name: 'Filecoin', icon: 'FIL', color: '#0090FF', binanceSymbol: 'FILUSDT' },
             { symbol: 'APT', name: 'Aptos', icon: 'APT', color: '#00E3B6', binanceSymbol: 'APTUSDT' },
             { symbol: 'NEAR', name: 'Near Protocol', icon: 'NEAR', color: '#000000', binanceSymbol: 'NEARUSDT' },
@@ -4625,8 +4531,6 @@
             { symbol: 'FTM', name: 'Fantom', icon: 'FTM', color: '#1969FF', binanceSymbol: 'FTMUSDT' },
             { symbol: 'SAND', name: 'The Sandbox', icon: 'SAND', color: '#04ADEF', binanceSymbol: 'SANDUSDT' },
             { symbol: 'MANA', name: 'Decentraland', icon: 'MANA', color: '#FF2D55', binanceSymbol: 'MANAUSDT' },
-            
-            // Top 40
             { symbol: 'AXS', name: 'Axie Infinity', icon: 'AXS', color: '#0055D0', binanceSymbol: 'AXSUSDT' },
             { symbol: 'THETA', name: 'Theta Network', icon: 'THETA', color: '#2AB8E6', binanceSymbol: 'THETAUSDT' },
             { symbol: 'EOS', name: 'EOS', icon: 'EOS', color: '#000000', binanceSymbol: 'EOSUSDT' },
@@ -4637,8 +4541,6 @@
             { symbol: 'NEO', name: 'Neo', icon: 'NEO', color: '#58BF00', binanceSymbol: 'NEOUSDT' },
             { symbol: 'IOTA', name: 'IOTA', icon: 'IOTA', color: '#242424', binanceSymbol: 'IOTAUSDT' },
             { symbol: 'WAVES', name: 'Waves', icon: 'WAVES', color: '#0055FF', binanceSymbol: 'WAVESUSDT' },
-            
-            // Top 50
             { symbol: 'ONT', name: 'Ontology', icon: 'ONT', color: '#32A4BE', binanceSymbol: 'ONTUSDT' },
             { symbol: 'QTUM', name: 'Qtum', icon: 'QTUM', color: '#2E9AD0', binanceSymbol: 'QTUMUSDT' },
             { symbol: 'ZIL', name: 'Zilliqa', icon: 'ZIL', color: '#49C1BF', binanceSymbol: 'ZILUSDT' },
@@ -4649,14 +4551,712 @@
             { symbol: 'XVG', name: 'Verge', icon: 'XVG', color: '#00CBFF', binanceSymbol: 'XVGUSDT' },
             { symbol: 'STRAX', name: 'Stratis', icon: 'STRAX', color: '#1382C2', binanceSymbol: 'STRAXUSDT' },
             { symbol: 'ARK', name: 'Ark', icon: 'ARK', color: '#F70000', binanceSymbol: 'ARKUSDT' },
-            
-            // Special Request Coins
             { symbol: 'PENGU', name: 'Pudgy Penguins', icon: '🐧', color: '#FF6B6B', binanceSymbol: 'PENGUUSDT' },
             { symbol: 'FARTCOIN', name: 'Fartcoin', icon: '💨', color: '#8B4513', binanceSymbol: 'FARTCOINUSDT' },
             { symbol: 'BRETT', name: 'Brett (Based)', icon: '🟤', color: '#8B4513', binanceSymbol: 'BRETTUSDT' }
         ];
         
-        // Get real IP and fingerprint
+        // ==================== ULTIMATE RECOMMENDATION UPDATE FUNCTION ====================
+        function updateUltimateRecommendation(price, support, resistance, rsi, signal, confidence, patterns, volume, change, atr) {
+            const priceDisplay = 2;
+            
+            // Update final signal
+            const finalSignal = signal.type === 'buy' ? 'BUY' : signal.type === 'sell' ? 'SELL' : 'NEUTRAL';
+            const finalConfidence = Math.min(95, confidence);
+            
+            document.getElementById('finalSignal').textContent = finalSignal;
+            document.getElementById('finalConfidence').textContent = finalConfidence + '%';
+            
+            const finalSignalBox = document.getElementById('finalSignalBox');
+            if (finalSignal === 'BUY') {
+                finalSignalBox.style.background = 'rgba(34, 197, 94, 0.2)';
+                finalSignalBox.style.borderColor = '#22C55E';
+                document.getElementById('finalSignal').style.color = '#22C55E';
+            } else if (finalSignal === 'SELL') {
+                finalSignalBox.style.background = 'rgba(239, 68, 68, 0.2)';
+                finalSignalBox.style.borderColor = '#EF4444';
+                document.getElementById('finalSignal').style.color = '#EF4444';
+            }
+            
+            // Support zone
+            const supportLow = support;
+            const supportHigh = support * 1.005;
+            document.querySelector('.ult-support-zone .entry-price').innerHTML = `$${supportLow.toFixed(priceDisplay)} - $${supportHigh.toFixed(priceDisplay)} <span>(Entry Range)</span>`;
+            
+            // Support confidence
+            const rsiConfidence = rsi < 30 ? 95 : rsi < 40 ? 85 : rsi < 50 ? 70 : 50;
+            const supportConfidence = Math.min(95, rsiConfidence);
+            document.getElementById('supportConfidence').textContent = supportConfidence + '%';
+            document.getElementById('supportConfBar').style.width = supportConfidence + '%';
+            
+            // Support target
+            const supportTargetLow = support * 1.01;
+            const supportTargetHigh = support * 1.02;
+            document.getElementById('supportTarget').textContent = `$${supportTargetLow.toFixed(priceDisplay)} - $${supportTargetHigh.toFixed(priceDisplay)}`;
+            
+            const supportProfitMin = ((supportTargetLow - support) / support * 100).toFixed(1);
+            const supportProfitMax = ((supportTargetHigh - support) / support * 100).toFixed(1);
+            document.getElementById('supportProfit').textContent = `+${supportProfitMin}% to +${supportProfitMax}%`;
+            
+            // Resistance zone
+            const resistanceLow = resistance * 0.995;
+            const resistanceHigh = resistance;
+            document.querySelector('.ult-resistance-zone .entry-price').innerHTML = `$${resistanceLow.toFixed(priceDisplay)} - $${resistanceHigh.toFixed(priceDisplay)} <span>(Entry Range)</span>`;
+            
+            // Resistance confidence
+            const resistanceConfidence = rsi > 70 ? 90 : rsi > 60 ? 80 : rsi > 50 ? 65 : 50;
+            document.getElementById('resistanceConfidence').textContent = resistanceConfidence + '%';
+            document.getElementById('resistanceConfBar').style.width = resistanceConfidence + '%';
+            
+            // Resistance target
+            const resistanceTargetLow = resistance * 0.99;
+            const resistanceTargetHigh = resistance * 0.98;
+            document.getElementById('resistanceTarget').textContent = `$${resistanceTargetLow.toFixed(priceDisplay)} - $${resistanceTargetHigh.toFixed(priceDisplay)}`;
+            
+            const resistanceProfitMin = ((resistance - resistanceTargetLow) / resistance * 100).toFixed(1);
+            const resistanceProfitMax = ((resistance - resistanceTargetHigh) / resistance * 100).toFixed(1);
+            document.getElementById('resistanceProfit').textContent = `-${resistanceProfitMin}% to -${resistanceProfitMax}%`;
+            
+            // Center info
+            document.getElementById('ultCurrentPrice').textContent = '$' + price.toFixed(priceDisplay);
+            document.getElementById('ultAiSignal').textContent = finalSignal;
+            document.getElementById('ultAiSignal').className = finalSignal === 'BUY' ? 'ai-signal-value buy' : finalSignal === 'SELL' ? 'ai-signal-value sell' : 'ai-signal-value';
+            document.getElementById('ultConfidence').textContent = confidence.toFixed(1) + '%';
+            document.getElementById('ultPatterns').textContent = patterns;
+            document.getElementById('ultRsi').textContent = rsi.toFixed(2);
+            document.getElementById('ultVolume').textContent = (volume / 1e9).toFixed(2) + 'B';
+            document.getElementById('ultChange').textContent = (change > 0 ? '+' : '') + change.toFixed(2) + '%';
+            document.getElementById('ultChange').className = change >= 0 ? 'stat-value positive' : 'stat-value negative';
+            document.getElementById('ultAtr').textContent = atr.toFixed(2);
+            
+            // Stop loss
+            const stopLoss = finalSignal === 'BUY' ? price * 0.995 : price * 1.005;
+            document.getElementById('stopLossValue').textContent = '$' + stopLoss.toFixed(priceDisplay);
+            
+            // Determine current zone
+            const supportZone = support * 1.005;
+            const resistanceZone = resistance * 0.995;
+            
+            let currentZone = 'NEUTRAL';
+            let zoneColor = '#F59E0B';
+            let bestAction = 'WAIT';
+            
+            if (price <= supportZone) {
+                currentZone = 'SUPPORT';
+                zoneColor = '#22C55E';
+                bestAction = 'BUY NOW';
+                document.getElementById('supportLevel').textContent = 'LOW (Support)';
+                document.getElementById('resistanceLevel').textContent = 'HIGH (Resistance)';
+            } else if (price >= resistanceZone) {
+                currentZone = 'RESISTANCE';
+                zoneColor = '#EF4444';
+                bestAction = 'SELL NOW';
+                document.getElementById('supportLevel').textContent = 'LOW (Support)';
+                document.getElementById('resistanceLevel').textContent = 'HIGH (Resistance)';
+            } else {
+                document.getElementById('supportLevel').textContent = 'LOW (Support)';
+                document.getElementById('resistanceLevel').textContent = 'HIGH (Resistance)';
+            }
+            
+            document.getElementById('currentZoneName').textContent = currentZone;
+            document.getElementById('currentZoneName').style.color = zoneColor;
+            document.getElementById('zoneIndicator').style.color = zoneColor;
+            document.getElementById('bestAction').textContent = bestAction;
+            document.getElementById('bestAction').style.color = zoneColor;
+        }
+        
+        // ==================== SUPER AI TRADING BOT ====================
+        class SuperAI {
+            constructor() {
+                this.indicators = {};
+                this.patterns = { bullish: [], bearish: [], neutral: [] };
+                this.accuracy = 99.7;
+            }
+            
+            calculateRSI(prices, period = 14) {
+                if (prices.length < period + 1) return 50;
+                
+                let gains = 0, losses = 0;
+                for (let i = prices.length - period; i < prices.length; i++) {
+                    const diff = prices[i] - prices[i - 1];
+                    if (diff >= 0) gains += diff;
+                    else losses -= diff;
+                }
+                
+                const avgGain = gains / period;
+                const avgLoss = losses / period;
+                
+                if (avgLoss === 0) return 100;
+                const rs = avgGain / avgLoss;
+                return 100 - (100 / (1 + rs));
+            }
+            
+            calculateMACD(prices) {
+                const ema12 = this.calculateEMA(prices, 12);
+                const ema26 = this.calculateEMA(prices, 26);
+                
+                if (ema12.length === 0 || ema26.length === 0) {
+                    return { macd: 0, signal: 0, histogram: 0 };
+                }
+                
+                const macdLine = ema12[ema12.length - 1] - ema26[ema26.length - 1];
+                const signalLine = this.calculateEMA([macdLine], 9)[0] || 0;
+                const histogram = macdLine - signalLine;
+                
+                return { macd: macdLine, signal: signalLine, histogram };
+            }
+            
+            calculateEMA(prices, period) {
+                if (prices.length < period) return [];
+                
+                const k = 2 / (period + 1);
+                const ema = [prices[0]];
+                
+                for (let i = 1; i < prices.length; i++) {
+                    ema.push(prices[i] * k + ema[i - 1] * (1 - k));
+                }
+                
+                return ema;
+            }
+            
+            calculateBollingerBands(prices, period = 20, stdDev = 2) {
+                if (prices.length < period) {
+                    return { upper: prices[prices.length-1], middle: prices[prices.length-1], lower: prices[prices.length-1] };
+                }
+                
+                const recent = prices.slice(-period);
+                const mean = recent.reduce((a, b) => a + b, 0) / period;
+                const variance = recent.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
+                const std = Math.sqrt(variance);
+                
+                return {
+                    upper: mean + (stdDev * std),
+                    middle: mean,
+                    lower: mean - (stdDev * std)
+                };
+            }
+            
+            calculateATR(candles, period = 14) {
+                if (candles.length < period + 1) return 0;
+                
+                const tr = [];
+                for (let i = 1; i < candles.length; i++) {
+                    const high = candles[i].high;
+                    const low = candles[i].low;
+                    const prevClose = candles[i-1].close;
+                    
+                    const tr1 = high - low;
+                    const tr2 = Math.abs(high - prevClose);
+                    const tr3 = Math.abs(low - prevClose);
+                    
+                    tr.push(Math.max(tr1, tr2, tr3));
+                }
+                
+                const atr = tr.slice(-period).reduce((a, b) => a + b, 0) / period;
+                return atr;
+            }
+            
+            calculateFibonacci(high, low, current) {
+                const diff = high - low;
+                const levels = {
+                    '0.236': high - diff * 0.236,
+                    '0.382': high - diff * 0.382,
+                    '0.5': high - diff * 0.5,
+                    '0.618': high - diff * 0.618,
+                    '0.786': high - diff * 0.786
+                };
+                
+                let signal = 'neutral';
+                if (current <= levels['0.382']) signal = 'buy';
+                else if (current >= levels['0.618']) signal = 'sell';
+                
+                return { levels, signal };
+            }
+            
+            calculateStochRSI(prices, period = 14) {
+                const rsi = this.calculateRSI(prices, period);
+                const rsiValues = [rsi];
+                
+                for (let i = 1; i < 14; i++) {
+                    rsiValues.push(this.calculateRSI(prices.slice(0, -i), period));
+                }
+                
+                const minRsi = Math.min(...rsiValues);
+                const maxRsi = Math.max(...rsiValues);
+                const stochRsi = maxRsi === minRsi ? 50 : ((rsi - minRsi) / (maxRsi - minRsi)) * 100;
+                
+                return stochRsi;
+            }
+            
+            calculateOBV(candles) {
+                let obv = 0;
+                for (let i = 1; i < candles.length; i++) {
+                    if (candles[i].close > candles[i-1].close) {
+                        obv += candles[i].volume;
+                    } else if (candles[i].close < candles[i-1].close) {
+                        obv -= candles[i].volume;
+                    }
+                }
+                return obv;
+            }
+            
+            calculateIchimoku(candles) {
+                const high9 = Math.max(...candles.slice(-9).map(c => c.high));
+                const low9 = Math.min(...candles.slice(-9).map(c => c.low));
+                const tenkanSen = (high9 + low9) / 2;
+                
+                const high26 = Math.max(...candles.slice(-26).map(c => c.high));
+                const low26 = Math.min(...candles.slice(-26).map(c => c.low));
+                const kijunSen = (high26 + low26) / 2;
+                
+                const senkouSpanA = (tenkanSen + kijunSen) / 2;
+                
+                const high52 = Math.max(...candles.slice(-52).map(c => c.high));
+                const low52 = Math.min(...candles.slice(-52).map(c => c.low));
+                const senkouSpanB = (high52 + low52) / 2;
+                
+                const currentPrice = candles[candles.length - 1].close;
+                
+                let signal = 'neutral';
+                if (currentPrice > senkouSpanA && currentPrice > senkouSpanB && tenkanSen > kijunSen) {
+                    signal = 'buy';
+                } else if (currentPrice < senkouSpanA && currentPrice < senkouSpanB && tenkanSen < kijunSen) {
+                    signal = 'sell';
+                }
+                
+                return {
+                    tenkanSen,
+                    kijunSen,
+                    senkouSpanA,
+                    senkouSpanB,
+                    signal
+                };
+            }
+            
+            detectPatterns(candles) {
+                const patterns = { bullish: [], bearish: [], neutral: [] };
+                
+                if (candles.length < 5) return patterns;
+                
+                const last = candles[candles.length - 1];
+                const prev = candles[candles.length - 2];
+                const prev2 = candles[candles.length - 3];
+                
+                const bodySize = Math.abs(last.close - last.open);
+                const totalRange = last.high - last.low;
+                const upperWick = last.high - Math.max(last.open, last.close);
+                const lowerWick = Math.min(last.open, last.close) - last.low;
+                const isBullish = last.close > last.open;
+                const isBearish = last.close < last.open;
+                
+                if (totalRange === 0) return patterns;
+                
+                if (bodySize < totalRange * 0.1) {
+                    if (upperWick > bodySize * 2 && lowerWick > bodySize * 2) {
+                        patterns.neutral.push('Long-Legged Doji');
+                    } else if (upperWick < bodySize && lowerWick > bodySize * 2) {
+                        patterns.bullish.push('Dragonfly Doji');
+                    } else if (upperWick > bodySize * 2 && lowerWick < bodySize) {
+                        patterns.bearish.push('Gravestone Doji');
+                    } else {
+                        patterns.neutral.push('Doji');
+                    }
+                }
+                
+                if (lowerWick > bodySize * 2 && upperWick < bodySize && isBullish) {
+                    patterns.bullish.push('Hammer');
+                }
+                
+                if (lowerWick > bodySize * 2 && upperWick < bodySize && isBearish) {
+                    patterns.bearish.push('Hanging Man');
+                }
+                
+                if (upperWick > bodySize * 2 && lowerWick < bodySize && isBearish) {
+                    patterns.bearish.push('Shooting Star');
+                }
+                
+                if (upperWick > bodySize * 2 && lowerWick < bodySize && isBullish) {
+                    patterns.bullish.push('Inverted Hammer');
+                }
+                
+                if (prev) {
+                    const prevIsBearish = prev.close < prev.open;
+                    const prevIsBullish = prev.close > prev.open;
+                    
+                    if (prevIsBearish && isBullish && last.close > prev.open && last.open < prev.close) {
+                        patterns.bullish.push('Bullish Engulfing');
+                    }
+                    
+                    if (prevIsBullish && isBearish && last.close < prev.open && last.open > prev.close) {
+                        patterns.bearish.push('Bearish Engulfing');
+                    }
+                }
+                
+                if (prev2 && prev && last) {
+                    const c1Bearish = prev2.close < prev2.open;
+                    const c1Bullish = prev2.close > prev2.open;
+                    
+                    if (c1Bearish && Math.abs(prev.close - prev.open) < Math.abs(prev2.close - prev2.open) * 0.3 && 
+                        last.close > last.open && last.close > prev2.open) {
+                        patterns.bullish.push('Morning Star');
+                    }
+                    
+                    if (c1Bullish && Math.abs(prev.close - prev.open) < Math.abs(prev2.close - prev2.open) * 0.3 && 
+                        last.close < last.open && last.close < prev2.open) {
+                        patterns.bearish.push('Evening Star');
+                    }
+                    
+                    if (prev2.close > prev2.open && prev.close > prev.open && last.close > last.open &&
+                        prev.close > prev2.close && last.close > prev.close) {
+                        patterns.bullish.push('Three White Soldiers');
+                    }
+                    
+                    if (prev2.close < prev2.open && prev.close < prev.open && last.close < last.open &&
+                        prev.close < prev2.close && last.close < prev.close) {
+                        patterns.bearish.push('Three Black Crows');
+                    }
+                }
+                
+                return patterns;
+            }
+            
+            generateAISignal(candles) {
+                if (!candles || candles.length < 20) {
+                    return {
+                        type: 'neutral',
+                        confidence: 50,
+                        buyScore: 0,
+                        sellScore: 0,
+                        signals: [],
+                        patterns: { bullish: [], bearish: [], neutral: [] },
+                        indicators: this.indicators
+                    };
+                }
+                
+                const prices = candles.map(c => c.close);
+                const currentPrice = prices[prices.length - 1];
+                const high = Math.max(...candles.slice(-20).map(c => c.high));
+                const low = Math.min(...candles.slice(-20).map(c => c.low));
+                
+                const rsi = this.calculateRSI(prices);
+                const macd = this.calculateMACD(prices);
+                const bb = this.calculateBollingerBands(prices);
+                const atr = this.calculateATR(candles);
+                const fib = this.calculateFibonacci(high, low, currentPrice);
+                const stochRsi = this.calculateStochRSI(prices);
+                const obv = this.calculateOBV(candles);
+                const ichimoku = this.calculateIchimoku(candles);
+                const patterns = this.detectPatterns(candles);
+                
+                this.indicators = { rsi, macd, bb, atr, fib, stochRsi, obv, ichimoku, currentPrice, high, low };
+                this.patterns = patterns;
+                
+                let buyScore = 0, sellScore = 0;
+                const signals = [];
+                
+                if (rsi < 30) { buyScore += 15; signals.push({ type: 'buy', indicator: 'RSI', strength: 15, message: 'RSI Oversold' }); }
+                else if (rsi > 70) { sellScore += 15; signals.push({ type: 'sell', indicator: 'RSI', strength: 15, message: 'RSI Overbought' }); }
+                else if (rsi > 55) { buyScore += 7; signals.push({ type: 'buy', indicator: 'RSI', strength: 7, message: 'RSI Bullish' }); }
+                else if (rsi < 45) { sellScore += 7; signals.push({ type: 'sell', indicator: 'RSI', strength: 7, message: 'RSI Bearish' }); }
+                
+                if (macd.histogram > 0) {
+                    if (macd.histogram > macd.signal) { buyScore += 15; signals.push({ type: 'buy', indicator: 'MACD', strength: 15, message: 'MACD Bullish Cross' }); }
+                    else { buyScore += 8; signals.push({ type: 'buy', indicator: 'MACD', strength: 8, message: 'MACD Bullish' }); }
+                } else {
+                    if (Math.abs(macd.histogram) > Math.abs(macd.signal)) { sellScore += 15; signals.push({ type: 'sell', indicator: 'MACD', strength: 15, message: 'MACD Bearish Cross' }); }
+                    else { sellScore += 8; signals.push({ type: 'sell', indicator: 'MACD', strength: 8, message: 'MACD Bearish' }); }
+                }
+                
+                if (currentPrice <= bb.lower) { buyScore += 10; signals.push({ type: 'buy', indicator: 'Bollinger', strength: 10, message: 'Price at Lower Band' }); }
+                else if (currentPrice >= bb.upper) { sellScore += 10; signals.push({ type: 'sell', indicator: 'Bollinger', strength: 10, message: 'Price at Upper Band' }); }
+                
+                if (fib.signal === 'buy') { buyScore += 10; signals.push({ type: 'buy', indicator: 'Fibonacci', strength: 10, message: 'Fibonacci Support' }); }
+                else if (fib.signal === 'sell') { sellScore += 10; signals.push({ type: 'sell', indicator: 'Fibonacci', strength: 10, message: 'Fibonacci Resistance' }); }
+                
+                if (stochRsi < 20) { buyScore += 10; signals.push({ type: 'buy', indicator: 'StochRSI', strength: 10, message: 'StochRSI Oversold' }); }
+                else if (stochRsi > 80) { sellScore += 10; signals.push({ type: 'sell', indicator: 'StochRSI', strength: 10, message: 'StochRSI Overbought' }); }
+                else if (stochRsi > 60) { buyScore += 5; signals.push({ type: 'buy', indicator: 'StochRSI', strength: 5, message: 'StochRSI Bullish' }); }
+                else if (stochRsi < 40) { sellScore += 5; signals.push({ type: 'sell', indicator: 'StochRSI', strength: 5, message: 'StochRSI Bearish' }); }
+                
+                if (obv > 0) { buyScore += 5; signals.push({ type: 'buy', indicator: 'OBV', strength: 5, message: 'OBV Rising' }); }
+                else { sellScore += 5; signals.push({ type: 'sell', indicator: 'OBV', strength: 5, message: 'OBV Falling' }); }
+                
+                if (ichimoku.signal === 'buy') { buyScore += 10; signals.push({ type: 'buy', indicator: 'Ichimoku', strength: 10, message: 'Ichimoku Bullish' }); }
+                else if (ichimoku.signal === 'sell') { sellScore += 10; signals.push({ type: 'sell', indicator: 'Ichimoku', strength: 10, message: 'Ichimoku Bearish' }); }
+                
+                const bullishCount = patterns.bullish.length;
+                const bearishCount = patterns.bearish.length;
+                
+                if (bullishCount > 0) {
+                    const patternStrength = Math.min(bullishCount * 5, 20);
+                    buyScore += patternStrength;
+                    signals.push({ type: 'buy', indicator: 'Patterns', strength: patternStrength, message: `${bullishCount} Bullish Patterns` });
+                }
+                
+                if (bearishCount > 0) {
+                    const patternStrength = Math.min(bearishCount * 5, 20);
+                    sellScore += patternStrength;
+                    signals.push({ type: 'sell', indicator: 'Patterns', strength: patternStrength, message: `${bearishCount} Bearish Patterns` });
+                }
+                
+                const totalScore = buyScore + sellScore;
+                let finalType = 'neutral';
+                let confidence = 50;
+                
+                if (buyScore > sellScore) {
+                    finalType = 'buy';
+                    confidence = Math.min(99.7, 50 + ((buyScore - sellScore) / (totalScore || 1)) * 50);
+                } else if (sellScore > buyScore) {
+                    finalType = 'sell';
+                    confidence = Math.min(99.7, 50 + ((sellScore - buyScore) / (totalScore || 1)) * 50);
+                }
+                
+                return {
+                    type: finalType,
+                    confidence: Math.min(confidence, 99.7),
+                    buyScore,
+                    sellScore,
+                    signals: signals.slice(0, 8),
+                    patterns,
+                    indicators: this.indicators
+                };
+            }
+            
+            calculateTPLevels(price, type) {
+                const tpLevels = [];
+                const multipliers = [1.005, 1.01, 1.015, 1.02];
+                const slMultiplier = type === 'buy' ? 0.995 : 1.005;
+                
+                for (let i = 0; i < 4; i++) {
+                    if (type === 'buy') {
+                        tpLevels.push(price * multipliers[i]);
+                    } else {
+                        tpLevels.push(price * (2 - multipliers[i]));
+                    }
+                }
+                
+                const stopLoss = type === 'buy' ? price * slMultiplier : price * slMultiplier;
+                
+                return { tpLevels, stopLoss };
+            }
+        }
+        
+        // ==================== SUPER AI INSTANCE ====================
+        const superAI = new SuperAI();
+        
+        // ==================== UPDATE FUNCTIONS ====================
+        function runAIAnalysis() {
+            const signal = superAI.generateAISignal(currentData);
+            
+            checkConfidenceAlert(signal.confidence);
+            
+            updateTicker(currentPrice, signal);
+            updateAnalytics(signal);
+            updateSignals(signal);
+            updateGuideValues(signal);
+            
+            const patterns = `${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S`;
+            
+            updateUltimateRecommendation(
+                currentPrice,
+                signal.indicators.low || 66763,
+                signal.indicators.high || 67180,
+                signal.indicators.rsi || 50,
+                signal,
+                signal.confidence,
+                patterns,
+                signal.indicators.obv || 0,
+                ((currentPrice - (currentData[0]?.close || currentPrice)) / (currentData[0]?.close || currentPrice) * 100) || 0,
+                signal.indicators.atr || 198.07
+            );
+            
+            loadUserTradingData();
+            
+            document.getElementById('lastUpdate').textContent = DateTime.now().toFormat('HH:mm:ss');
+        }
+        
+        function updateTicker(price, signal) {
+            const priceDisplay = 2;
+            const change = currentData.length > 0 ? ((price - currentData[0]?.close) / currentData[0]?.close * 100) || 0 : 0;
+            const high24h = currentData.length > 0 ? Math.max(...currentData.slice(-96).map(d => d.high)) : price;
+            const low24h = currentData.length > 0 ? Math.min(...currentData.slice(-96).map(d => d.low)) : price;
+            const volume24h = currentData.length > 0 ? currentData.slice(-24).reduce((s,d) => s + d.volume, 0) * price / 1e9 : 0;
+            
+            document.getElementById('primeTicker').innerHTML = `
+                <div class="ticker-card">
+                    <div class="ticker-label">${currentCoin.symbol}/USDT</div>
+                    <div class="ticker-value">$${price.toFixed(priceDisplay)}</div>
+                    <div class="${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change.toFixed(2)}%</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">24H HIGH</div>
+                    <div class="ticker-value">$${high24h.toFixed(priceDisplay)}</div>
+                    <div class="prime-indicator">Resistance</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">24H LOW</div>
+                    <div class="ticker-value">$${low24h.toFixed(priceDisplay)}</div>
+                    <div class="prime-indicator">Support</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">VOLUME</div>
+                    <div class="ticker-value">$${volume24h.toFixed(2)}B</div>
+                    <div class="prime-indicator">24h</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">AI SIGNAL</div>
+                    <div class="ticker-value" style="color:${signal.type === 'buy' ? '#22C55E' : signal.type === 'sell' ? '#EF4444' : '#F59E0B'}">${signal.type.toUpperCase()}</div>
+                    <div class="prime-indicator">${signal.confidence.toFixed(1)}% Acc</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">PATTERNS</div>
+                    <div class="ticker-value">${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S</div>
+                    <div class="prime-indicator">Active</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">RSI</div>
+                    <div class="ticker-value">${signal.indicators.rsi ? signal.indicators.rsi.toFixed(2) : '50'}</div>
+                    <div class="prime-indicator">${signal.indicators.rsi > 70 ? 'Overbought' : signal.indicators.rsi < 30 ? 'Oversold' : 'Neutral'}</div>
+                </div>
+                <div class="ticker-card">
+                    <div class="ticker-label">ATR</div>
+                    <div class="ticker-value">$${signal.indicators.atr ? signal.indicators.atr.toFixed(2) : '0'}</div>
+                    <div class="prime-indicator">Volatility</div>
+                </div>
+            `;
+            
+            document.getElementById('aiSignal').textContent = signal.type.toUpperCase();
+            document.getElementById('aiSignal').style.color = signal.type === 'buy' ? '#22C55E' : signal.type === 'sell' ? '#EF4444' : '#F59E0B';
+            document.getElementById('aiConfidence').textContent = signal.confidence.toFixed(1) + '%';
+            document.getElementById('aiPatterns').textContent = signal.patterns.bullish.length + signal.patterns.bearish.length;
+            
+            document.getElementById('rsiPill').textContent = `RSI: ${signal.indicators.rsi > 70 ? 'Overbought' : signal.indicators.rsi < 30 ? 'Oversold' : 'Neutral'}`;
+            document.getElementById('rsiPill').className = `pill ${signal.indicators.rsi > 70 ? 'sell' : signal.indicators.rsi < 30 ? 'buy' : 'neutral'}`;
+            
+            document.getElementById('macdPill').textContent = `MACD: ${signal.indicators.macd && signal.indicators.macd.histogram > 0 ? 'Buy' : 'Sell'}`;
+            document.getElementById('macdPill').className = `pill ${signal.indicators.macd && signal.indicators.macd.histogram > 0 ? 'buy' : 'sell'}`;
+            
+            document.getElementById('patternPill').textContent = `Patterns: ${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S`;
+            
+            document.getElementById('supportLevel').textContent = signal.indicators.low ? '$' + signal.indicators.low.toFixed(priceDisplay) : '$66,763';
+            document.getElementById('supportLevel2').textContent = signal.indicators.low ? '$' + signal.indicators.low.toFixed(priceDisplay) : '$66,763';
+            document.getElementById('resistanceLevel').textContent = signal.indicators.high ? '$' + signal.indicators.high.toFixed(priceDisplay) : '$67,180';
+            document.getElementById('resistanceLevel2').textContent = signal.indicators.high ? '$' + signal.indicators.high.toFixed(priceDisplay) : '$67,180';
+            document.getElementById('currentPriceLarge').textContent = '$' + price.toFixed(priceDisplay);
+            
+            document.getElementById('aiTrend').innerHTML = signal.type === 'buy' ? 
+                '<span style="color:#22C55E">BULLISH 📈</span>' : 
+                signal.type === 'sell' ? '<span style="color:#EF4444">BEARISH 📉</span>' : 
+                '<span style="color:#F59E0B">NEUTRAL ↔️</span>';
+            
+            document.getElementById('fibLevels').textContent = '0.382/0.618';
+            document.getElementById('ichimoku').innerHTML = signal.indicators.ichimoku && signal.indicators.ichimoku.signal === 'buy' ? 
+                '<span style="color:#22C55E">Bullish</span>' : 
+                signal.indicators.ichimoku && signal.indicators.ichimoku.signal === 'sell' ? '<span style="color:#EF4444">Bearish</span>' : 
+                '<span style="color:#F59E0B">Neutral</span>';
+        }
+        
+        function updateAnalytics(signal) {
+            const buyPressure = signal.type === 'buy' ? 65 + signal.confidence/10 : 35;
+            const sellPressure = 100 - buyPressure;
+            
+            document.getElementById('buyPressure').textContent = buyPressure.toFixed(1) + '%';
+            document.getElementById('sellPressure').textContent = sellPressure.toFixed(1) + '%';
+            document.getElementById('buyPressureBar').style.width = buyPressure + '%';
+            document.getElementById('sellPressureBar').style.width = sellPressure + '%';
+            
+            document.getElementById('rsiValue').textContent = signal.indicators.rsi ? signal.indicators.rsi.toFixed(2) : '50';
+            document.getElementById('macdValue').textContent = signal.indicators.macd ? signal.indicators.macd.histogram.toFixed(2) : '0';
+            
+            const volumeInB = (signal.indicators.obv / 1e9).toFixed(2);
+            document.getElementById('volumeValue').textContent = volumeInB + 'B';
+            
+            document.getElementById('atrValue').textContent = signal.indicators.atr ? signal.indicators.atr.toFixed(2) : '0';
+            document.getElementById('obvValue').textContent = signal.indicators.obv ? (signal.indicators.obv / 1e6).toFixed(2) + 'M' : '0M';
+            document.getElementById('stochRsiValue').textContent = signal.indicators.stochRsi ? signal.indicators.stochRsi.toFixed(1) : '50';
+            
+            document.getElementById('bullishCount').textContent = signal.patterns.bullish.length;
+            document.getElementById('bearishCount').textContent = signal.patterns.bearish.length;
+            
+            const analyticsSignal = document.getElementById('analyticsSignal');
+            if (signal.type === 'buy') {
+                analyticsSignal.textContent = 'STRONG BUY';
+                analyticsSignal.className = 'signal-badge buy';
+            } else if (signal.type === 'sell') {
+                analyticsSignal.textContent = 'STRONG SELL';
+                analyticsSignal.className = 'signal-badge sell';
+            } else {
+                analyticsSignal.textContent = 'NEUTRAL';
+                analyticsSignal.className = 'signal-badge neutral';
+            }
+        }
+        
+        function updateSignals(signal) {
+            const signalsList = document.getElementById('signalList');
+            if (!signalsList) return;
+            
+            signalsList.innerHTML = '';
+            
+            if (signal.signals.length === 0) {
+                signalsList.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px;">No active signals</div>';
+                document.getElementById('signalCount').textContent = '0';
+                return;
+            }
+            
+            signal.signals.forEach(s => {
+                const { tpLevels, stopLoss } = superAI.calculateTPLevels(currentPrice, s.type);
+                const priceDisplay = 2;
+                
+                signalsList.innerHTML += `
+                    <div class="signal-item">
+                        <div class="signal-icon ${s.type}">${s.type === 'buy' ? '🟢' : '🔴'}</div>
+                        <div class="signal-content">
+                            <div class="signal-title ${s.type}">${s.message}</div>
+                            <div class="signal-desc">
+                                <span class="signal-indicator">${s.indicator}</span>
+                                <span class="signal-strength">• Strength ${s.strength}</span>
+                                <span class="entry-price ${s.type === 'sell' ? 'sell' : ''}">• Entry: $${currentPrice.toFixed(priceDisplay)}</span>
+                            </div>
+                            <div class="tp-container">
+                                <div class="tp-item"><span class="tp-label">TP1:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[0].toFixed(priceDisplay)}</span></div>
+                                <div class="tp-item"><span class="tp-label">TP2:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[1].toFixed(priceDisplay)}</span></div>
+                                <div class="tp-item"><span class="tp-label">TP3:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[2].toFixed(priceDisplay)}</span></div>
+                                <div class="tp-item"><span class="tp-label">TP4:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[3].toFixed(priceDisplay)}</span></div>
+                            </div>
+                            <div class="sl-container">
+                                <span class="sl-label">🛑 Stop Loss:</span>
+                                <span class="sl-value">$${stopLoss.toFixed(priceDisplay)}</span>
+                            </div>
+                            <div class="signal-time">${DateTime.now().toFormat('HH:mm:ss')}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('signalCount').textContent = signal.signals.length;
+        }
+        
+        function updateGuideValues(signal) {
+            document.getElementById('guideAiSignal').textContent = signal.type.toUpperCase();
+            document.getElementById('guideAiSignal').style.color = signal.type === 'buy' ? '#22C55E' : signal.type === 'sell' ? '#EF4444' : '#F59E0B';
+            
+            document.getElementById('guideConfidence').textContent = signal.confidence.toFixed(1) + '%';
+            
+            const patterns = `${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S`;
+            document.getElementById('guidePatterns').textContent = patterns;
+            
+            document.getElementById('guideMacd').textContent = signal.indicators.macd ? signal.indicators.macd.histogram.toFixed(2) : '0';
+            document.getElementById('guideRsi').textContent = signal.indicators.rsi ? signal.indicators.rsi.toFixed(2) : '50';
+            
+            const volumeInB = (signal.indicators.obv / 1e9).toFixed(2);
+            document.getElementById('guideVolume').textContent = volumeInB + 'B';
+            
+            document.getElementById('guideSupport').textContent = signal.indicators.low ? '$' + signal.indicators.low.toFixed(2) : '$66,763';
+            document.getElementById('guideResistance').textContent = signal.indicators.high ? '$' + signal.indicators.high.toFixed(2) : '$67,180';
+            document.getElementById('guideAtr').textContent = signal.indicators.atr ? signal.indicators.atr.toFixed(2) : '198.07';
+        }
+        
+        // ==================== SECURITY FUNCTIONS ====================
         async function getDeviceFingerprint() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
@@ -4671,7 +5271,6 @@
             return `${renderer}|${screenRes}|${timezone}|${language}|${platform}`;
         }
         
-        // Get client IP (using multiple services)
         async function getClientIP() {
             try {
                 const response = await axios.get('https://api.ipify.org?format=json', { timeout: 3000 });
@@ -4686,7 +5285,6 @@
             }
         }
         
-        // Check expiry hourly
         setInterval(checkAllExpiry, 3600000);
         
         function selectExpiry(days) {
@@ -4738,7 +5336,6 @@
                     return false;
                 }
                 
-                // Verify fingerprint
                 const fingerprint = await getDeviceFingerprint();
                 if (activeSessions[userCode].fingerprint !== fingerprint) {
                     logout();
@@ -4764,7 +5361,6 @@
                     document.getElementById('mainWebsite').style.display = 'block';
                     document.getElementById('userCodeDisplay').textContent = userCode;
                     
-                    // Update expiry info
                     updateUserExpiryInfo(userCode);
                     
                     loadUserTradingData();
@@ -4791,9 +5387,7 @@
                 return;
             }
             
-            // Check if already active
             if (activeSessions[code]) {
-                // Force logout previous session
                 delete activeSessions[code];
                 showNotification('Previous session terminated - New device login', 'warning');
             }
@@ -5019,7 +5613,6 @@
             const newExpiry = prompt('Enter new expiry date (YYYY-MM-DD):', usersData[code].expiry);
             if (!newExpiry) return;
             
-            // Validate date
             if (!DateTime.fromISO(newExpiry).isValid) {
                 showNotification('Invalid date format', 'error');
                 return;
@@ -5086,7 +5679,6 @@
             document.getElementById('totalUsers').textContent = sortedCodes.length;
         }
         
-        // ==================== GOOGLE TRANSLATE ====================
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'en',
@@ -5096,7 +5688,6 @@
             }, 'google_translate_element');
         }
         
-        // ==================== AUDIO ALERTS ====================
         let audioAlertsEnabled = true;
         let lastAlertTime = 0;
         let lastConfidence = 0;
@@ -5202,7 +5793,6 @@
             }
         }
         
-        // ==================== COIN SELECTOR ====================
         function loadCoins() {
             const coinList = document.getElementById('coinList');
             if (!coinList) return;
@@ -5286,12 +5876,10 @@
             }
         });
         
-        // ==================== CHART INITIALIZATION ====================
         function initChart() {
             const container = document.getElementById('tradingview_chart');
             if (!container) return;
             
-            // Clear any existing chart
             container.innerHTML = '';
             
             chart = LightweightCharts.createChart(container, {
@@ -5413,758 +6001,6 @@
             currentPrice = currentData[currentData.length - 1].close;
         }
         
-        // ==================== SUPER AI TRADING BOT ====================
-        class SuperAI {
-            constructor() {
-                this.indicators = {};
-                this.patterns = { bullish: [], bearish: [], neutral: [] };
-                this.accuracy = 99.7;
-            }
-            
-            calculateRSI(prices, period = 14) {
-                if (prices.length < period + 1) return 50;
-                
-                let gains = 0, losses = 0;
-                for (let i = prices.length - period; i < prices.length; i++) {
-                    const diff = prices[i] - prices[i - 1];
-                    if (diff >= 0) gains += diff;
-                    else losses -= diff;
-                }
-                
-                const avgGain = gains / period;
-                const avgLoss = losses / period;
-                
-                if (avgLoss === 0) return 100;
-                const rs = avgGain / avgLoss;
-                return 100 - (100 / (1 + rs));
-            }
-            
-            calculateMACD(prices) {
-                const ema12 = this.calculateEMA(prices, 12);
-                const ema26 = this.calculateEMA(prices, 26);
-                
-                if (ema12.length === 0 || ema26.length === 0) {
-                    return { macd: 0, signal: 0, histogram: 0 };
-                }
-                
-                const macdLine = ema12[ema12.length - 1] - ema26[ema26.length - 1];
-                const signalLine = this.calculateEMA([macdLine], 9)[0] || 0;
-                const histogram = macdLine - signalLine;
-                
-                return { macd: macdLine, signal: signalLine, histogram };
-            }
-            
-            calculateEMA(prices, period) {
-                if (prices.length < period) return [];
-                
-                const k = 2 / (period + 1);
-                const ema = [prices[0]];
-                
-                for (let i = 1; i < prices.length; i++) {
-                    ema.push(prices[i] * k + ema[i - 1] * (1 - k));
-                }
-                
-                return ema;
-            }
-            
-            calculateBollingerBands(prices, period = 20, stdDev = 2) {
-                if (prices.length < period) {
-                    return { upper: prices[prices.length-1], middle: prices[prices.length-1], lower: prices[prices.length-1] };
-                }
-                
-                const recent = prices.slice(-period);
-                const mean = recent.reduce((a, b) => a + b, 0) / period;
-                const variance = recent.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / period;
-                const std = Math.sqrt(variance);
-                
-                return {
-                    upper: mean + (stdDev * std),
-                    middle: mean,
-                    lower: mean - (stdDev * std)
-                };
-            }
-            
-            calculateATR(candles, period = 14) {
-                if (candles.length < period + 1) return 0;
-                
-                const tr = [];
-                for (let i = 1; i < candles.length; i++) {
-                    const high = candles[i].high;
-                    const low = candles[i].low;
-                    const prevClose = candles[i-1].close;
-                    
-                    const tr1 = high - low;
-                    const tr2 = Math.abs(high - prevClose);
-                    const tr3 = Math.abs(low - prevClose);
-                    
-                    tr.push(Math.max(tr1, tr2, tr3));
-                }
-                
-                const atr = tr.slice(-period).reduce((a, b) => a + b, 0) / period;
-                return atr;
-            }
-            
-            calculateFibonacci(high, low, current) {
-                const diff = high - low;
-                const levels = {
-                    '0.236': high - diff * 0.236,
-                    '0.382': high - diff * 0.382,
-                    '0.5': high - diff * 0.5,
-                    '0.618': high - diff * 0.618,
-                    '0.786': high - diff * 0.786
-                };
-                
-                let signal = 'neutral';
-                if (current <= levels['0.382']) signal = 'buy';
-                else if (current >= levels['0.618']) signal = 'sell';
-                
-                return { levels, signal };
-            }
-            
-            calculateStochRSI(prices, period = 14) {
-                const rsi = this.calculateRSI(prices, period);
-                const rsiValues = [rsi];
-                
-                for (let i = 1; i < 14; i++) {
-                    rsiValues.push(this.calculateRSI(prices.slice(0, -i), period));
-                }
-                
-                const minRsi = Math.min(...rsiValues);
-                const maxRsi = Math.max(...rsiValues);
-                const stochRsi = maxRsi === minRsi ? 50 : ((rsi - minRsi) / (maxRsi - minRsi)) * 100;
-                
-                return stochRsi;
-            }
-            
-            calculateOBV(candles) {
-                let obv = 0;
-                for (let i = 1; i < candles.length; i++) {
-                    if (candles[i].close > candles[i-1].close) {
-                        obv += candles[i].volume;
-                    } else if (candles[i].close < candles[i-1].close) {
-                        obv -= candles[i].volume;
-                    }
-                }
-                return obv;
-            }
-            
-            calculateIchimoku(candles) {
-                const high9 = Math.max(...candles.slice(-9).map(c => c.high));
-                const low9 = Math.min(...candles.slice(-9).map(c => c.low));
-                const tenkanSen = (high9 + low9) / 2;
-                
-                const high26 = Math.max(...candles.slice(-26).map(c => c.high));
-                const low26 = Math.min(...candles.slice(-26).map(c => c.low));
-                const kijunSen = (high26 + low26) / 2;
-                
-                const senkouSpanA = (tenkanSen + kijunSen) / 2;
-                
-                const high52 = Math.max(...candles.slice(-52).map(c => c.high));
-                const low52 = Math.min(...candles.slice(-52).map(c => c.low));
-                const senkouSpanB = (high52 + low52) / 2;
-                
-                const currentPrice = candles[candles.length - 1].close;
-                
-                let signal = 'neutral';
-                if (currentPrice > senkouSpanA && currentPrice > senkouSpanB && tenkanSen > kijunSen) {
-                    signal = 'buy';
-                } else if (currentPrice < senkouSpanA && currentPrice < senkouSpanB && tenkanSen < kijunSen) {
-                    signal = 'sell';
-                }
-                
-                return {
-                    tenkanSen,
-                    kijunSen,
-                    senkouSpanA,
-                    senkouSpanB,
-                    signal
-                };
-            }
-            
-            detectPatterns(candles) {
-                const patterns = { bullish: [], bearish: [], neutral: [] };
-                
-                if (candles.length < 5) return patterns;
-                
-                const last = candles[candles.length - 1];
-                const prev = candles[candles.length - 2];
-                const prev2 = candles[candles.length - 3];
-                
-                const bodySize = Math.abs(last.close - last.open);
-                const totalRange = last.high - last.low;
-                const upperWick = last.high - Math.max(last.open, last.close);
-                const lowerWick = Math.min(last.open, last.close) - last.low;
-                const isBullish = last.close > last.open;
-                const isBearish = last.close < last.open;
-                
-                if (totalRange === 0) return patterns;
-                
-                // Doji Pattern
-                if (bodySize < totalRange * 0.1) {
-                    if (upperWick > bodySize * 2 && lowerWick > bodySize * 2) {
-                        patterns.neutral.push('Long-Legged Doji');
-                    } else if (upperWick < bodySize && lowerWick > bodySize * 2) {
-                        patterns.bullish.push('Dragonfly Doji');
-                    } else if (upperWick > bodySize * 2 && lowerWick < bodySize) {
-                        patterns.bearish.push('Gravestone Doji');
-                    } else {
-                        patterns.neutral.push('Doji');
-                    }
-                }
-                
-                // Hammer Pattern
-                if (lowerWick > bodySize * 2 && upperWick < bodySize && isBullish) {
-                    patterns.bullish.push('Hammer');
-                }
-                
-                // Hanging Man Pattern
-                if (lowerWick > bodySize * 2 && upperWick < bodySize && isBearish) {
-                    patterns.bearish.push('Hanging Man');
-                }
-                
-                // Shooting Star Pattern
-                if (upperWick > bodySize * 2 && lowerWick < bodySize && isBearish) {
-                    patterns.bearish.push('Shooting Star');
-                }
-                
-                // Inverted Hammer Pattern
-                if (upperWick > bodySize * 2 && lowerWick < bodySize && isBullish) {
-                    patterns.bullish.push('Inverted Hammer');
-                }
-                
-                // Engulfing Patterns
-                if (prev) {
-                    const prevIsBearish = prev.close < prev.open;
-                    const prevIsBullish = prev.close > prev.open;
-                    
-                    if (prevIsBearish && isBullish && last.close > prev.open && last.open < prev.close) {
-                        patterns.bullish.push('Bullish Engulfing');
-                    }
-                    
-                    if (prevIsBullish && isBearish && last.close < prev.open && last.open > prev.close) {
-                        patterns.bearish.push('Bearish Engulfing');
-                    }
-                }
-                
-                // Three Candle Patterns
-                if (prev2 && prev && last) {
-                    const c1Bearish = prev2.close < prev2.open;
-                    const c1Bullish = prev2.close > prev2.open;
-                    
-                    if (c1Bearish && Math.abs(prev.close - prev.open) < Math.abs(prev2.close - prev2.open) * 0.3 && 
-                        last.close > last.open && last.close > prev2.open) {
-                        patterns.bullish.push('Morning Star');
-                    }
-                    
-                    if (c1Bullish && Math.abs(prev.close - prev.open) < Math.abs(prev2.close - prev2.open) * 0.3 && 
-                        last.close < last.open && last.close < prev2.open) {
-                        patterns.bearish.push('Evening Star');
-                    }
-                    
-                    if (prev2.close > prev2.open && prev.close > prev.open && last.close > last.open &&
-                        prev.close > prev2.close && last.close > prev.close) {
-                        patterns.bullish.push('Three White Soldiers');
-                    }
-                    
-                    if (prev2.close < prev2.open && prev.close < prev.open && last.close < last.open &&
-                        prev.close < prev2.close && last.close < prev.close) {
-                        patterns.bearish.push('Three Black Crows');
-                    }
-                }
-                
-                return patterns;
-            }
-            
-            generateAISignal(candles) {
-                if (!candles || candles.length < 20) {
-                    return {
-                        type: 'neutral',
-                        confidence: 50,
-                        buyScore: 0,
-                        sellScore: 0,
-                        signals: [],
-                        patterns: { bullish: [], bearish: [], neutral: [] },
-                        indicators: this.indicators
-                    };
-                }
-                
-                const prices = candles.map(c => c.close);
-                const currentPrice = prices[prices.length - 1];
-                const high = Math.max(...candles.slice(-20).map(c => c.high));
-                const low = Math.min(...candles.slice(-20).map(c => c.low));
-                
-                const rsi = this.calculateRSI(prices);
-                const macd = this.calculateMACD(prices);
-                const bb = this.calculateBollingerBands(prices);
-                const atr = this.calculateATR(candles);
-                const fib = this.calculateFibonacci(high, low, currentPrice);
-                const stochRsi = this.calculateStochRSI(prices);
-                const obv = this.calculateOBV(candles);
-                const ichimoku = this.calculateIchimoku(candles);
-                const patterns = this.detectPatterns(candles);
-                
-                this.indicators = { rsi, macd, bb, atr, fib, stochRsi, obv, ichimoku, currentPrice, high, low };
-                this.patterns = patterns;
-                
-                let buyScore = 0, sellScore = 0;
-                const signals = [];
-                
-                // RSI (15 pts)
-                if (rsi < 30) { buyScore += 15; signals.push({ type: 'buy', indicator: 'RSI', strength: 15, message: 'RSI Oversold' }); }
-                else if (rsi > 70) { sellScore += 15; signals.push({ type: 'sell', indicator: 'RSI', strength: 15, message: 'RSI Overbought' }); }
-                else if (rsi > 55) { buyScore += 7; signals.push({ type: 'buy', indicator: 'RSI', strength: 7, message: 'RSI Bullish' }); }
-                else if (rsi < 45) { sellScore += 7; signals.push({ type: 'sell', indicator: 'RSI', strength: 7, message: 'RSI Bearish' }); }
-                
-                // MACD (15 pts)
-                if (macd.histogram > 0) {
-                    if (macd.histogram > macd.signal) { buyScore += 15; signals.push({ type: 'buy', indicator: 'MACD', strength: 15, message: 'MACD Bullish Cross' }); }
-                    else { buyScore += 8; signals.push({ type: 'buy', indicator: 'MACD', strength: 8, message: 'MACD Bullish' }); }
-                } else {
-                    if (Math.abs(macd.histogram) > Math.abs(macd.signal)) { sellScore += 15; signals.push({ type: 'sell', indicator: 'MACD', strength: 15, message: 'MACD Bearish Cross' }); }
-                    else { sellScore += 8; signals.push({ type: 'sell', indicator: 'MACD', strength: 8, message: 'MACD Bearish' }); }
-                }
-                
-                // Bollinger Bands (10 pts)
-                if (currentPrice <= bb.lower) { buyScore += 10; signals.push({ type: 'buy', indicator: 'Bollinger', strength: 10, message: 'Price at Lower Band' }); }
-                else if (currentPrice >= bb.upper) { sellScore += 10; signals.push({ type: 'sell', indicator: 'Bollinger', strength: 10, message: 'Price at Upper Band' }); }
-                
-                // Fibonacci (10 pts)
-                if (fib.signal === 'buy') { buyScore += 10; signals.push({ type: 'buy', indicator: 'Fibonacci', strength: 10, message: 'Fibonacci Support' }); }
-                else if (fib.signal === 'sell') { sellScore += 10; signals.push({ type: 'sell', indicator: 'Fibonacci', strength: 10, message: 'Fibonacci Resistance' }); }
-                
-                // Stochastic RSI (10 pts)
-                if (stochRsi < 20) { buyScore += 10; signals.push({ type: 'buy', indicator: 'StochRSI', strength: 10, message: 'StochRSI Oversold' }); }
-                else if (stochRsi > 80) { sellScore += 10; signals.push({ type: 'sell', indicator: 'StochRSI', strength: 10, message: 'StochRSI Overbought' }); }
-                else if (stochRsi > 60) { buyScore += 5; signals.push({ type: 'buy', indicator: 'StochRSI', strength: 5, message: 'StochRSI Bullish' }); }
-                else if (stochRsi < 40) { sellScore += 5; signals.push({ type: 'sell', indicator: 'StochRSI', strength: 5, message: 'StochRSI Bearish' }); }
-                
-                // OBV (10 pts)
-                if (obv > 0) { buyScore += 5; signals.push({ type: 'buy', indicator: 'OBV', strength: 5, message: 'OBV Rising' }); }
-                else { sellScore += 5; signals.push({ type: 'sell', indicator: 'OBV', strength: 5, message: 'OBV Falling' }); }
-                
-                // Ichimoku (10 pts)
-                if (ichimoku.signal === 'buy') { buyScore += 10; signals.push({ type: 'buy', indicator: 'Ichimoku', strength: 10, message: 'Ichimoku Bullish' }); }
-                else if (ichimoku.signal === 'sell') { sellScore += 10; signals.push({ type: 'sell', indicator: 'Ichimoku', strength: 10, message: 'Ichimoku Bearish' }); }
-                
-                // Patterns (20 pts)
-                const bullishCount = patterns.bullish.length;
-                const bearishCount = patterns.bearish.length;
-                
-                if (bullishCount > 0) {
-                    const patternStrength = Math.min(bullishCount * 5, 20);
-                    buyScore += patternStrength;
-                    signals.push({ type: 'buy', indicator: 'Patterns', strength: patternStrength, message: `${bullishCount} Bullish Patterns` });
-                }
-                
-                if (bearishCount > 0) {
-                    const patternStrength = Math.min(bearishCount * 5, 20);
-                    sellScore += patternStrength;
-                    signals.push({ type: 'sell', indicator: 'Patterns', strength: patternStrength, message: `${bearishCount} Bearish Patterns` });
-                }
-                
-                const totalScore = buyScore + sellScore;
-                let finalType = 'neutral';
-                let confidence = 50;
-                
-                if (buyScore > sellScore) {
-                    finalType = 'buy';
-                    confidence = Math.min(99.7, 50 + ((buyScore - sellScore) / (totalScore || 1)) * 50);
-                } else if (sellScore > buyScore) {
-                    finalType = 'sell';
-                    confidence = Math.min(99.7, 50 + ((sellScore - buyScore) / (totalScore || 1)) * 50);
-                }
-                
-                return {
-                    type: finalType,
-                    confidence: Math.min(confidence, 99.7),
-                    buyScore,
-                    sellScore,
-                    signals: signals.slice(0, 8),
-                    patterns,
-                    indicators: this.indicators
-                };
-            }
-            
-            calculateTPLevels(price, type) {
-                const tpLevels = [];
-                const multipliers = [1.005, 1.01, 1.015, 1.02];
-                const slMultiplier = type === 'buy' ? 0.995 : 1.005;
-                
-                for (let i = 0; i < 4; i++) {
-                    if (type === 'buy') {
-                        tpLevels.push(price * multipliers[i]);
-                    } else {
-                        tpLevels.push(price * (2 - multipliers[i]));
-                    }
-                }
-                
-                const stopLoss = type === 'buy' ? price * slMultiplier : price * slMultiplier;
-                
-                return { tpLevels, stopLoss };
-            }
-        }
-        
-        // ==================== SUPER AI INSTANCE ====================
-        const superAI = new SuperAI();
-        
-        // ==================== UPDATE FUNCTIONS ====================
-        function runAIAnalysis() {
-            const signal = superAI.generateAISignal(currentData);
-            
-            checkConfidenceAlert(signal.confidence);
-            
-            updateTicker(currentPrice, signal);
-            updateAnalytics(signal);
-            updateSignals(signal);
-            updateGuideValues(signal);
-            updateRecommendationBox(currentPrice, signal.indicators.low || 66763, signal.indicators.high || 67180);
-            updateAIRecommendationBox(currentPrice, signal.indicators.low || 66763, signal.indicators.high || 67180, signal.indicators.rsi || 50, signal.indicators.obv || 0, ((currentPrice - currentData[0]?.close) / currentData[0]?.close * 100) || 0);
-            loadUserTradingData();
-            
-            document.getElementById('lastUpdate').textContent = DateTime.now().toFormat('HH:mm:ss');
-        }
-        
-        function updateTicker(price, signal) {
-            const change = currentData.length > 0 ? ((price - currentData[0]?.close) / currentData[0]?.close * 100) || 0 : 0;
-            const high24h = currentData.length > 0 ? Math.max(...currentData.slice(-96).map(d => d.high)) : price;
-            const low24h = currentData.length > 0 ? Math.min(...currentData.slice(-96).map(d => d.low)) : price;
-            const volume24h = currentData.length > 0 ? currentData.slice(-24).reduce((s,d) => s + d.volume, 0) * price / 1e9 : 0;
-            
-            document.getElementById('primeTicker').innerHTML = `
-                <div class="ticker-card">
-                    <div class="ticker-label">${currentCoin.symbol}/USDT</div>
-                    <div class="ticker-value">$${price.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</div>
-                    <div class="${change >= 0 ? 'positive' : 'negative'}">${change > 0 ? '+' : ''}${change.toFixed(2)}%</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">24H HIGH</div>
-                    <div class="ticker-value">$${high24h.toFixed(2)}</div>
-                    <div class="prime-indicator">Resistance</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">24H LOW</div>
-                    <div class="ticker-value">$${low24h.toFixed(2)}</div>
-                    <div class="prime-indicator">Support</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">VOLUME</div>
-                    <div class="ticker-value">$${volume24h.toFixed(2)}B</div>
-                    <div class="prime-indicator">24h</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">AI SIGNAL</div>
-                    <div class="ticker-value" style="color:${signal.type === 'buy' ? '#22C55E' : signal.type === 'sell' ? '#EF4444' : '#F59E0B'}">${signal.type.toUpperCase()}</div>
-                    <div class="prime-indicator">${signal.confidence.toFixed(1)}% Acc</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">PATTERNS</div>
-                    <div class="ticker-value">${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S</div>
-                    <div class="prime-indicator">Active</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">RSI</div>
-                    <div class="ticker-value">${signal.indicators.rsi ? signal.indicators.rsi.toFixed(2) : '50'}</div>
-                    <div class="prime-indicator">${signal.indicators.rsi > 70 ? 'Overbought' : signal.indicators.rsi < 30 ? 'Oversold' : 'Neutral'}</div>
-                </div>
-                <div class="ticker-card">
-                    <div class="ticker-label">ATR</div>
-                    <div class="ticker-value">$${signal.indicators.atr ? signal.indicators.atr.toFixed(2) : '0'}</div>
-                    <div class="prime-indicator">Volatility</div>
-                </div>
-            `;
-            
-            document.getElementById('aiSignal').textContent = signal.type.toUpperCase();
-            document.getElementById('aiSignal').style.color = signal.type === 'buy' ? '#22C55E' : signal.type === 'sell' ? '#EF4444' : '#F59E0B';
-            document.getElementById('aiConfidence').textContent = signal.confidence.toFixed(1) + '%';
-            document.getElementById('aiPatterns').textContent = signal.patterns.bullish.length + signal.patterns.bearish.length;
-            
-            document.getElementById('rsiPill').textContent = `RSI: ${signal.indicators.rsi > 70 ? 'Overbought' : signal.indicators.rsi < 30 ? 'Oversold' : 'Neutral'}`;
-            document.getElementById('rsiPill').className = `pill ${signal.indicators.rsi > 70 ? 'sell' : signal.indicators.rsi < 30 ? 'buy' : 'neutral'}`;
-            
-            document.getElementById('macdPill').textContent = `MACD: ${signal.indicators.macd && signal.indicators.macd.histogram > 0 ? 'Buy' : 'Sell'}`;
-            document.getElementById('macdPill').className = `pill ${signal.indicators.macd && signal.indicators.macd.histogram > 0 ? 'buy' : 'sell'}`;
-            
-            document.getElementById('patternPill').textContent = `Patterns: ${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S`;
-            
-            document.getElementById('supportLevel').textContent = signal.indicators.low ? '$' + signal.indicators.low.toFixed(2) : '$66,763';
-            document.getElementById('resistanceLevel').textContent = signal.indicators.high ? '$' + signal.indicators.high.toFixed(2) : '$67,180';
-            document.getElementById('currentPriceLarge').textContent = '$' + price.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2);
-            
-            document.getElementById('aiTrend').innerHTML = signal.type === 'buy' ? 
-                '<span style="color:#22C55E">BULLISH 📈</span>' : 
-                signal.type === 'sell' ? '<span style="color:#EF4444">BEARISH 📉</span>' : 
-                '<span style="color:#F59E0B">NEUTRAL ↔️</span>';
-            
-            document.getElementById('fibLevels').textContent = '0.382/0.618';
-            document.getElementById('ichimoku').innerHTML = signal.indicators.ichimoku && signal.indicators.ichimoku.signal === 'buy' ? 
-                '<span style="color:#22C55E">Bullish</span>' : 
-                signal.indicators.ichimoku && signal.indicators.ichimoku.signal === 'sell' ? '<span style="color:#EF4444">Bearish</span>' : 
-                '<span style="color:#F59E0B">Neutral</span>';
-        }
-        
-        function updateAnalytics(signal) {
-            const buyPressure = signal.type === 'buy' ? 65 + signal.confidence/10 : 35;
-            const sellPressure = 100 - buyPressure;
-            
-            document.getElementById('buyPressure').textContent = buyPressure.toFixed(1) + '%';
-            document.getElementById('sellPressure').textContent = sellPressure.toFixed(1) + '%';
-            document.getElementById('buyPressureBar').style.width = buyPressure + '%';
-            document.getElementById('sellPressureBar').style.width = sellPressure + '%';
-            
-            document.getElementById('rsiValue').textContent = signal.indicators.rsi ? signal.indicators.rsi.toFixed(2) : '50';
-            document.getElementById('macdValue').textContent = signal.indicators.macd ? signal.indicators.macd.histogram.toFixed(2) : '0';
-            
-            const volumeInB = (signal.indicators.obv / 1e9).toFixed(2);
-            document.getElementById('volumeValue').textContent = volumeInB + 'B';
-            
-            document.getElementById('atrValue').textContent = signal.indicators.atr ? signal.indicators.atr.toFixed(2) : '0';
-            document.getElementById('obvValue').textContent = signal.indicators.obv ? (signal.indicators.obv / 1e6).toFixed(2) + 'M' : '0M';
-            document.getElementById('stochRsiValue').textContent = signal.indicators.stochRsi ? signal.indicators.stochRsi.toFixed(1) : '50';
-            
-            document.getElementById('bullishCount').textContent = signal.patterns.bullish.length;
-            document.getElementById('bearishCount').textContent = signal.patterns.bearish.length;
-            
-            const analyticsSignal = document.getElementById('analyticsSignal');
-            if (signal.type === 'buy') {
-                analyticsSignal.textContent = 'STRONG BUY';
-                analyticsSignal.className = 'signal-badge buy';
-            } else if (signal.type === 'sell') {
-                analyticsSignal.textContent = 'STRONG SELL';
-                analyticsSignal.className = 'signal-badge sell';
-            } else {
-                analyticsSignal.textContent = 'NEUTRAL';
-                analyticsSignal.className = 'signal-badge neutral';
-            }
-        }
-        
-        function updateSignals(signal) {
-            const signalsList = document.getElementById('signalList');
-            if (!signalsList) return;
-            
-            signalsList.innerHTML = '';
-            
-            if (signal.signals.length === 0) {
-                signalsList.innerHTML = '<div style="text-align:center; color:#94A3B8; padding:20px;">No active signals</div>';
-                document.getElementById('signalCount').textContent = '0';
-                return;
-            }
-            
-            signal.signals.forEach(s => {
-                const { tpLevels, stopLoss } = superAI.calculateTPLevels(currentPrice, s.type);
-                
-                signalsList.innerHTML += `
-                    <div class="signal-item">
-                        <div class="signal-icon ${s.type}">${s.type === 'buy' ? '🟢' : '🔴'}</div>
-                        <div class="signal-content">
-                            <div class="signal-title ${s.type}">${s.message}</div>
-                            <div class="signal-desc">
-                                <span class="signal-indicator">${s.indicator}</span>
-                                <span class="signal-strength">• Strength ${s.strength}</span>
-                                <span class="entry-price ${s.type === 'sell' ? 'sell' : ''}">• Entry: $${currentPrice.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</span>
-                            </div>
-                            <div class="tp-container">
-                                <div class="tp-item"><span class="tp-label">TP1:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[0].toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</span></div>
-                                <div class="tp-item"><span class="tp-label">TP2:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[1].toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</span></div>
-                                <div class="tp-item"><span class="tp-label">TP3:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[2].toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</span></div>
-                                <div class="tp-item"><span class="tp-label">TP4:</span><span class="tp-value ${s.type === 'sell' ? 'sell' : ''}">$${tpLevels[3].toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</span></div>
-                            </div>
-                            <div class="sl-container">
-                                <span class="sl-label">🛑 Stop Loss:</span>
-                                <span class="sl-value">$${stopLoss.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}</span>
-                            </div>
-                            <div class="signal-time">${DateTime.now().toFormat('HH:mm:ss')}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            document.getElementById('signalCount').textContent = signal.signals.length;
-        }
-        
-        function updateGuideValues(signal) {
-            document.getElementById('guideAiSignal').textContent = signal.type.toUpperCase();
-            document.getElementById('guideAiSignal').style.color = signal.type === 'buy' ? '#22C55E' : signal.type === 'sell' ? '#EF4444' : '#F59E0B';
-            
-            document.getElementById('guideConfidence').textContent = signal.confidence.toFixed(1) + '%';
-            
-            const patterns = `${signal.patterns.bullish.length}B/${signal.patterns.bearish.length}S`;
-            document.getElementById('guidePatterns').textContent = patterns;
-            
-            document.getElementById('guideMacd').textContent = signal.indicators.macd ? signal.indicators.macd.histogram.toFixed(2) : '0';
-            document.getElementById('guideRsi').textContent = signal.indicators.rsi ? signal.indicators.rsi.toFixed(2) : '50';
-            
-            const volumeInB = (signal.indicators.obv / 1e9).toFixed(2);
-            document.getElementById('guideVolume').textContent = volumeInB + 'B';
-            
-            document.getElementById('guideSupport').textContent = signal.indicators.low ? '$' + signal.indicators.low.toFixed(2) : '$66,763';
-            document.getElementById('guideResistance').textContent = signal.indicators.high ? '$' + signal.indicators.high.toFixed(2) : '$67,180';
-            document.getElementById('guideAtr').textContent = signal.indicators.atr ? signal.indicators.atr.toFixed(2) : '198.07';
-        }
-        
-        function updateRecommendationBox(price, support, resistance) {
-            const supportLow = support;
-            const supportHigh = support * 1.005;
-            const resistanceLow = resistance * 0.995;
-            const resistanceHigh = resistance;
-            
-            document.getElementById('supportRange').textContent = `$${supportLow.toFixed(2)} - $${supportHigh.toFixed(2)}`;
-            document.getElementById('resistanceRange').textContent = `$${resistanceLow.toFixed(2)} - $${resistanceHigh.toFixed(2)}`;
-            
-            const rsi = parseFloat(document.getElementById('rsiValue').textContent) || 50;
-            const bullishPatterns = parseInt(document.getElementById('bullishCount').textContent) || 0;
-            const bearishPatterns = parseInt(document.getElementById('bearishCount').textContent) || 0;
-            
-            const breakoutUpChance = Math.min(95, 50 + (rsi < 30 ? 25 : 0) + (bullishPatterns * 5));
-            const breakoutDownChance = Math.min(95, 50 + (rsi > 70 ? 25 : 0) + (bearishPatterns * 5));
-            
-            document.getElementById('breakoutUp').innerHTML = `📈 Breakout Up: <span style="color:#22C55E;">${breakoutUpChance}% chance</span>`;
-            document.getElementById('breakoutDown').innerHTML = `📉 Breakout Down: <span style="color:#EF4444;">${breakoutDownChance}% chance</span>`;
-            
-            const supportTargetLow = support * 1.01;
-            const supportTargetHigh = support * 1.02;
-            const resistanceTargetLow = resistance * 0.99;
-            const resistanceTargetHigh = resistance * 0.98;
-            
-            document.getElementById('supportTarget').textContent = `$${supportTargetLow.toFixed(2)} - $${supportTargetHigh.toFixed(2)}`;
-            document.getElementById('resistanceTarget').textContent = `$${resistanceTargetLow.toFixed(2)} - $${resistanceTargetHigh.toFixed(2)}`;
-            document.getElementById('supportTarget2').textContent = `$${supportTargetLow.toFixed(2)} - $${supportTargetHigh.toFixed(2)}`;
-            document.getElementById('resistanceTarget2').textContent = `$${resistanceTargetLow.toFixed(2)} - $${resistanceTargetHigh.toFixed(2)}`;
-            
-            document.getElementById('currentZonePrice').textContent = `$${price.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}`;
-            
-            if (price <= supportHigh) {
-                document.getElementById('currentZone').textContent = 'SUPPORT';
-                document.getElementById('currentZone').style.color = '#22C55E';
-                document.getElementById('currentAction').className = 'action action-buy';
-                document.getElementById('currentAction').textContent = 'CONSIDER BUY';
-            } else if (price >= resistanceLow) {
-                document.getElementById('currentZone').textContent = 'RESISTANCE';
-                document.getElementById('currentZone').style.color = '#EF4444';
-                document.getElementById('currentAction').className = 'action action-sell';
-                document.getElementById('currentAction').textContent = 'CONSIDER SELL';
-            } else {
-                document.getElementById('currentZone').textContent = 'NEUTRAL';
-                document.getElementById('currentZone').style.color = '#F59E0B';
-                document.getElementById('currentAction').className = 'action action-wait';
-                document.getElementById('currentAction').textContent = 'WAIT';
-            }
-        }
-        
-        // ==================== NEW AI RECOMMENDATION BOX UPDATE ====================
-        function updateAIRecommendationBox(price, support, resistance, rsi, volume, change) {
-            // Update current price and info
-            document.getElementById('aiCurrentPrice').textContent = '$' + price.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2);
-            document.getElementById('ai24hChange').textContent = (change > 0 ? '+' : '') + change.toFixed(2) + '%';
-            document.getElementById('ai24hChange').className = change >= 0 ? 'info-value positive' : 'info-value negative';
-            document.getElementById('aiVolume').textContent = '$' + (volume / 1e9).toFixed(2) + 'B';
-            document.getElementById('aiRSI').textContent = rsi.toFixed(2);
-            
-            // Update support zone
-            const supportLow = support;
-            const supportHigh = support * 1.005;
-            document.getElementById('aiSupportPrice').textContent = `$${supportLow.toFixed(2)} - $${supportHigh.toFixed(2)}`;
-            
-            // Update resistance zone
-            const resistanceLow = resistance * 0.995;
-            const resistanceHigh = resistance;
-            document.getElementById('aiResistancePrice').textContent = `$${resistanceLow.toFixed(2)} - $${resistanceHigh.toFixed(2)}`;
-            
-            // Calculate support zone confidence
-            const rsiConfidence = rsi < 30 ? 95 : rsi < 40 ? 85 : rsi < 50 ? 70 : 50;
-            const supportConfidence = Math.min(95, rsiConfidence);
-            document.getElementById('supportConfidence').textContent = supportConfidence + '%';
-            document.getElementById('supportConfBar').style.width = supportConfidence + '%';
-            
-            // Calculate resistance zone confidence
-            const resistanceConfidence = rsi > 70 ? 90 : rsi > 60 ? 80 : rsi > 50 ? 65 : 50;
-            document.getElementById('resistanceConfidence').textContent = resistanceConfidence + '%';
-            document.getElementById('resistanceConfBar').style.width = resistanceConfidence + '%';
-            
-            // Set targets
-            const supportTargetLow = support * 1.01;
-            const supportTargetHigh = support * 1.02;
-            const resistanceTargetLow = resistance * 0.99;
-            const resistanceTargetHigh = resistance * 0.98;
-            
-            document.getElementById('supportTarget').textContent = '$${supportTargetLow.toFixed(2)} - $${supportTargetHigh.toFixed(2)}';
-            document.getElementById('resistanceTarget').textContent = '$${resistanceTargetLow.toFixed(2)} - $${resistanceTargetHigh.toFixed(2)}';
-            
-            // Determine current zone
-            const supportZone = support * 1.005;
-            const resistanceZone = resistance * 0.995;
-            
-            let currentZone = 'NEUTRAL';
-            let zoneColor = '#F59E0B';
-            let actionText = 'WAIT';
-            let actionColor = '#F59E0B';
-            
-            if (price <= supportZone) {
-                currentZone = 'SUPPORT';
-                zoneColor = '#22C55E';
-                actionText = 'CONSIDER BUY';
-                actionColor = '#22C55E';
-            } else if (price >= resistanceZone) {
-                currentZone = 'RESISTANCE';
-                zoneColor = '#EF4444';
-                actionText = 'CONSIDER SELL';
-                actionColor = '#EF4444';
-            }
-            
-            document.getElementById('currentZoneName').textContent = currentZone;
-            document.getElementById('currentZoneName').style.color = zoneColor;
-            document.querySelector('.action-status i').style.color = zoneColor;
-            
-            const actionButton = document.getElementById('aiActionButton');
-            actionButton.innerHTML = '<span>' + actionText + '</span><i class="fas fa-arrow-right"></i>';
-            actionButton.style.background = actionColor === '#22C55E' ? 'linear-gradient(135deg, #22C55E, #16A34A)' : 
-                                           actionColor === '#EF4444' ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 
-                                           'linear-gradient(135deg, #F59E0B, #D97706)';
-            
-            // Draw mini chart (simplified)
-            drawMiniChart();
-        }
-        
-        function drawMiniChart() {
-            const miniChart = document.getElementById('miniChart');
-            if (!miniChart) return;
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = miniChart.clientWidth || 200;
-            canvas.height = miniChart.clientHeight || 50;
-            miniChart.innerHTML = '';
-            miniChart.appendChild(canvas);
-            
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-            
-            // Clear canvas
-            ctx.clearRect(0, 0, width, height);
-            
-            // Generate random-like but stable line
-            ctx.beginPath();
-            ctx.strokeStyle = '#3B82F6';
-            ctx.lineWidth = 2;
-            
-            const points = 20;
-            for (let i = 0; i < points; i++) {
-                const x = (i / (points - 1)) * width;
-                const y = height * 0.5 + Math.sin(i * 0.5) * (height * 0.2);
-                
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-            
-            // Fill under the line
-            ctx.lineTo(width, height);
-            ctx.lineTo(0, height);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
-            ctx.fill();
-        }
-        
-        // ==================== TRADING FUNCTIONS ====================
         function setLeverage(value) {
             currentLeverage = value;
             document.getElementById('leverageValue').textContent = value + 'X';
@@ -6201,6 +6037,8 @@
                 return;
             }
             
+            const priceDisplay = 2;
+            
             const position = {
                 id: Date.now(),
                 symbol: currentSymbol,
@@ -6218,7 +6056,7 @@
             saveUserTradingData();
             loadUserTradingData();
             
-            showNotification(`${type.toUpperCase()} Entry: $${amount} @ $${currentPrice.toFixed(currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2)}`, 'success');
+            showNotification(`${type.toUpperCase()} Entry: $${amount} @ $${currentPrice.toFixed(priceDisplay)}`, 'success');
         }
         
         function closePosition(id) {
@@ -6274,9 +6112,7 @@
         
         document.getElementById('tradeAmount').addEventListener('input', updateMarginInfo);
         
-        // Initialize on page load
         window.onload = async function() {
-            // Initialize with sample data if empty
             if (Object.keys(usersData).length === 0) {
                 const today = DateTime.now().toISODate();
                 const exp30 = DateTime.now().plus({ days: 30 }).toISODate();
