@@ -2969,10 +2969,10 @@
                     }
                 });
                 
-                const allowedDomains = ['localhost', '127.0.0.1'];
+                const allowedDomains = ['localhost', '127.0.0.1', 'https://aicryptobots.github.io/tradss/'];
                 const currentDomain = window.location.hostname;
                 
-                if (!allowedDomains.includes(currentDomain) && !currentDomain.includes('https://aicryptobots.github.io/tradss/')) {
+                if (!allowedDomains.includes(currentDomain) && !currentDomain.includes('github.io')) {
                     document.body.innerHTML = '<div class="self-destruct">⚠️ UNAUTHORIZED DOMAIN • SYSTEM TERMINATED ⚠️</div>';
                     setTimeout(() => window.location.href = 'about:blank', 3000);
                 }
