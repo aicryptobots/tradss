@@ -3438,256 +3438,7 @@
                     }, 3000);
                 }
             })();
-         // ==================== AUTO TRADING BOT (ALL OPTIONS + 100% WORKING) ====================
-(function() {
-    // Configuration
-    let enabled = false;
-    let interval = null;
-    let lastTradeTime = 0;
-    const COOLDOWN_MS = 60000; // 1 minute
-    let selectedTF = '5m';
-
-    // Load state from localStorage
-    if (localStorage.getItem('autoTradeEnabled') === 'true') enabled = true;
-    if (localStorage.getItem('autoTradeTF')) selectedTF = localStorage.getItem('autoTradeTF');
-
-    // Function to get RSI (tries multiple element IDs)
-    function getRSI() {
-        let val = document.getElementById('rsiValue')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        val = document.getElementById('ultRsi')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        val = document.querySelector('.indicator-card .value')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        console.warn('RSI element not found, using default 50');
-        return 50;
-    }
-
-    // Function to get Confidence
-    function getConfidence() {
-        let val = document.getElementById('finalConfidence')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        val = document.querySelector('.final-signal .signal-confidence')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        console.warn('Confidence element not found, using default 0');
-        return 0;
-    }
-
-    // Execute trade if conditions met
-    function takeTrade(action) {
-        if (!window.currentUser) {
-            console.log('Not logged in');
-            return false;
-        }
-        const userData = window.usersData?.[window.currentUser]?.tradingData;
-        if (!userData) return false;
-        if (userData.positions && userData.positions.length > 0) {
-            console.log('Open position exists');
-            return false;
-        }
-        const now = Date.now();
-        if (now - lastTradeTime < COOLDOWN_MS) {
-            console.log(`Cooldown: ${Math.ceil((COOLDOWN_MS - (now - lastTradeTime))/1000)}s left`);
-            return false;
-        }
-        // Set trade amount
-        const amountInput = document.getElementById('tradeAmount');
-        if (amountInput) amountInput.value = 20;
-        // Execute
-        if (typeof window.executeTrade === 'function') {
-            window.executeTrade(action);
-            lastTradeTime = now;
-            return true;
-        } else {
-            console.error('executeTrade function not found!');
-            return false;
-        }
-    }
-
-    // Main check function
-    function checkAndTrade() {
-        if (!enabled) return;
-        const rsi = getRSI();
-        const conf = getConfidence();
-        console.log(`[Auto] RSI=${rsi.toFixed(2)}, Confidence=${conf.toFixed(1)}%, Timeframe=${selectedTF}`);
-
-        let action = null;
-        if (conf >= 85 && rsi < 30) action = 'buy';
-        else if (conf >= 85 && rsi > 70) action = 'sell';
-
-        if (action) {
-            const success = takeTrade(action);
-            if (success) {
-                window.showNotification(`🤖 AUTO ${action.toUpperCase()} | RSI:${rsi.toFixed(0)} | Conf:${conf.toFixed(0)}%`, 'success');
-                console.log(`✅ Trade executed: ${action}`);
-            } else {
-                console.log('Trade failed (position/cooldown/login)');
-            }
-        } else {
-            console.log('Conditions not met');
-        }
-    }
-
-    // Manual test trade
-    function forceTrade(type) {
-        if (!window.currentUser) {
-            window.showNotification('Please login first', 'error');
-            return;
-        }
-        const userData = window.usersData?.[window.currentUser]?.tradingData;
-        if (userData?.positions?.length) {
-            window.showNotification('Close existing position first', 'warning');
-            return;
-        }
-        const amountInput = document.getElementById('tradeAmount');
-        if (amountInput) amountInput.value = 20;
-        if (typeof window.executeTrade === 'function') {
-            window.executeTrade(type);
-            window.showNotification(`🔧 Manual ${type.toUpperCase()}`, 'info');
-        } else {
-            window.showNotification('executeTrade function missing', 'error');
-        }
-    }
-
-    // Create UI panel (timeframe + start/stop + test buttons)
-    function addPanel() {
-        const footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-        if (!footer) {
-            setTimeout(addPanel, 500);
-            return;
-        }
-        if (document.getElementById('autoPanel')) return;
-
-        const panel = document.createElement('div');
-        panel.id = 'autoPanel';
-        panel.style.display = 'flex';
-        panel.style.flexWrap = 'wrap';
-        panel.style.gap = '10px';
-        panel.style.marginTop = '10px';
-        panel.style.alignItems = 'center';
-        panel.style.justifyContent = 'space-between';
-        panel.style.width = '100%';
-
-        // Left side: Timeframe dropdown + Start/Stop button
-        const leftDiv = document.createElement('div');
-        leftDiv.style.display = 'flex';
-        leftDiv.style.gap = '10px';
-        leftDiv.style.alignItems = 'center';
-
-        const select = document.createElement('select');
-        select.id = 'autoTimeframeSelect';
-        select.style.background = '#1A1F33';
-        select.style.border = '1px solid #3B82F6';
-        select.style.borderRadius = '8px';
-        select.style.padding = '8px 12px';
-        select.style.color = 'white';
-        ['1m','5m','15m','1h','4h','1D'].forEach(tf => {
-            const opt = document.createElement('option');
-            opt.value = tf;
-            opt.textContent = tf;
-            if (tf === selectedTF) opt.selected = true;
-            select.appendChild(opt);
-        });
-        select.onchange = (e) => {
-            selectedTF = e.target.value;
-            localStorage.setItem('autoTradeTF', selectedTF);
-            window.showNotification(`Timeframe set to ${selectedTF}`, 'info');
-        };
-
-        const startStopBtn = document.createElement('button');
-        startStopBtn.id = 'autoStartStopBtn';
-        startStopBtn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
-        startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
-        startStopBtn.style.color = 'white';
-        startStopBtn.style.border = 'none';
-        startStopBtn.style.borderRadius = '8px';
-        startStopBtn.style.padding = '8px 16px';
-        startStopBtn.style.cursor = 'pointer';
-        startStopBtn.onclick = () => {
-            enabled = !enabled;
-            localStorage.setItem('autoTradeEnabled', enabled);
-            startStopBtn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
-            if (enabled) {
-                if (interval) clearInterval(interval);
-                interval = setInterval(checkAndTrade, 10000); // check every 10 seconds
-                checkAndTrade(); // immediate check
-                window.showNotification('✅ Auto trading ENABLED (checks every 10s)', 'success');
-            } else {
-                if (interval) clearInterval(interval);
-                interval = null;
-                window.showNotification('⏹️ Auto trading DISABLED', 'info');
-            }
-        };
-
-        leftDiv.appendChild(select);
-        leftDiv.appendChild(startStopBtn);
-
-        // Right side: Test buttons
-        const rightDiv = document.createElement('div');
-        rightDiv.style.display = 'flex';
-        rightDiv.style.gap = '10px';
-
-        const testBuy = document.createElement('button');
-        testBuy.textContent = '🔵 Test BUY';
-        testBuy.style.background = '#22C55E';
-        testBuy.style.color = 'white';
-        testBuy.style.border = 'none';
-        testBuy.style.borderRadius = '8px';
-        testBuy.style.padding = '8px 16px';
-        testBuy.style.cursor = 'pointer';
-        testBuy.onclick = () => forceTrade('buy');
-
-        const testSell = document.createElement('button');
-        testSell.textContent = '🔴 Test SELL';
-        testSell.style.background = '#EF4444';
-        testSell.style.color = 'white';
-        testSell.style.border = 'none';
-        testSell.style.borderRadius = '8px';
-        testSell.style.padding = '8px 16px';
-        testSell.style.cursor = 'pointer';
-        testSell.onclick = () => forceTrade('sell');
-
-        rightDiv.appendChild(testBuy);
-        rightDiv.appendChild(testSell);
-
-        panel.appendChild(leftDiv);
-        panel.appendChild(rightDiv);
-        footer.appendChild(panel);
-    }
-
-    // Hook into login/logout to preserve state
-    function hookLoginLogout() {
-        if (typeof window.loginWithCode === 'function') {
-            const orig = window.loginWithCode;
-            window.loginWithCode = async function() {
-                await orig();
-                if (enabled && window.currentUser) {
-                    if (interval) clearInterval(interval);
-                    interval = setInterval(checkAndTrade, 10000);
-                    checkAndTrade();
-                }
-            };
-        }
-        if (typeof window.logout === 'function') {
-            const origLog = window.logout;
-            window.logout = function() {
-                if (interval) clearInterval(interval);
-                interval = null;
-                origLog();
-            };
-        }
-    }
-
-    // Initialize on page load
-    window.addEventListener('load', () => {
-        addPanel();
-        hookLoginLogout();
-        if (enabled && window.currentUser) {
-            interval = setInterval(checkAndTrade, 10000);
-            setTimeout(checkAndTrade, 2000);
-        }
-    });
-})();
+    
 </script>
     </div>
     
@@ -6410,6 +6161,229 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
+        // ========== ১. ট্রেড এক্সিকিউট ফাংশন (সবার আগে) ==========
+window.executeTrade = function(type) {
+    if (!window.currentUser) {
+        alert('লগইন করুন');
+        return;
+    }
+    let userData = window.usersData[window.currentUser].tradingData;
+    if (!userData) {
+        alert('ট্রেডিং ডাটা নেই');
+        return;
+    }
+    if (userData.positions && userData.positions.length > 0) {
+        alert('আগের পজিশন ক্লোজ করুন');
+        return;
+    }
+    let amount = 20;  // প্রতি ট্রেডে ২০ ডলার
+    let priceElem = document.getElementById('currentPriceLarge');
+    let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
+    let position = {
+        id: Date.now(),
+        symbol: 'BTCUSDT',
+        type: type,
+        amount: amount,
+        leverage: 1,
+        positionSize: amount,
+        entryPrice: price,
+        timestamp: new Date().toLocaleTimeString()
+    };
+    userData.positions.push(position);
+    userData.balance -= amount;
+    userData.totalTrades = (userData.totalTrades || 0) + 1;
+    localStorage.setItem('usersData', JSON.stringify(window.usersData));
+    if (typeof window.loadUserTradingData === 'function') {
+        window.loadUserTradingData();
+    }
+    alert(type.toUpperCase() + ' ট্রেড দেওয়া হয়েছে!');
+    console.log('ট্রেড:', type, 'প্রাইস:', price);
+};
+        // ========== ২. অটো ট্রেডিং বট (সব অপশনসহ) ==========
+(function() {
+    let enabled = false;
+    let interval = null;
+    let lastTradeTime = 0;
+    const COOLDOWN = 60000; // ১ মিনিট
+    let selectedTF = '5m';
+
+    if (localStorage.getItem('autoTradeEnabled') === 'true') enabled = true;
+    if (localStorage.getItem('autoTradeTF')) selectedTF = localStorage.getItem('autoTradeTF');
+
+    function getRSI() {
+        let val = document.getElementById('rsiValue')?.innerText;
+        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
+        val = document.getElementById('ultRsi')?.innerText;
+        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
+        return 50;
+    }
+
+    function getConfidence() {
+        let val = document.getElementById('finalConfidence')?.innerText;
+        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
+        return 0;
+    }
+
+    function checkAndTrade() {
+        if (!enabled) return;
+        if (!window.currentUser) return;
+        let userData = window.usersData?.[window.currentUser]?.tradingData;
+        if (!userData || (userData.positions && userData.positions.length > 0)) return;
+
+        let rsi = getRSI();
+        let conf = getConfidence();
+        console.log(`[Auto] RSI=${rsi}, Conf=${conf}, TF=${selectedTF}`);
+
+        let action = null;
+        if (conf >= 85 && rsi < 30) action = 'buy';
+        else if (conf >= 85 && rsi > 70) action = 'sell';
+        if (!action) return;
+
+        let now = Date.now();
+        if (now - lastTradeTime < COOLDOWN) return;
+
+        if (typeof window.executeTrade === 'function') {
+            window.executeTrade(action);
+            lastTradeTime = now;
+            window.showNotification(`🤖 AUTO ${action.toUpperCase()} | RSI:${rsi.toFixed(0)} | Conf:${conf.toFixed(0)}%`, 'success');
+        }
+    }
+
+    function addPanel() {
+        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
+        if (!footer) { setTimeout(addPanel, 500); return; }
+        if (document.getElementById('autoPanel')) return;
+
+        let panel = document.createElement('div');
+        panel.id = 'autoPanel';
+        panel.style.display = 'flex';
+        panel.style.flexWrap = 'wrap';
+        panel.style.gap = '10px';
+        panel.style.marginTop = '10px';
+        panel.style.alignItems = 'center';
+        panel.style.justifyContent = 'space-between';
+        panel.style.width = '100%';
+
+        let leftDiv = document.createElement('div');
+        leftDiv.style.display = 'flex';
+        leftDiv.style.gap = '10px';
+
+        let select = document.createElement('select');
+        select.id = 'autoTimeframe';
+        select.style.background = '#1A1F33';
+        select.style.border = '1px solid #3B82F6';
+        select.style.borderRadius = '8px';
+        select.style.padding = '8px 12px';
+        select.style.color = 'white';
+        ['1m','5m','15m','1h','4h','1D'].forEach(tf => {
+            let opt = document.createElement('option');
+            opt.value = tf;
+            opt.textContent = tf;
+            if (tf === selectedTF) opt.selected = true;
+            select.appendChild(opt);
+        });
+        select.onchange = (e) => {
+            selectedTF = e.target.value;
+            localStorage.setItem('autoTradeTF', selectedTF);
+            window.showNotification(`টাইমফ্রেম: ${selectedTF}`, 'info');
+        };
+
+        let btn = document.createElement('button');
+        btn.id = 'autoStartStop';
+        btn.textContent = enabled ? '⏸️ স্টপ অটো ট্রেড' : '🤖 স্টার্ট অটো ট্রেড';
+        btn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '8px';
+        btn.style.padding = '8px 16px';
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => {
+            enabled = !enabled;
+            localStorage.setItem('autoTradeEnabled', enabled);
+            btn.textContent = enabled ? '⏸️ স্টপ অটো ট্রেড' : '🤖 স্টার্ট অটো ট্রেড';
+            if (enabled) {
+                if (interval) clearInterval(interval);
+                interval = setInterval(checkAndTrade, 10000);
+                checkAndTrade();
+                window.showNotification('✅ অটো ট্রেড চালু (প্রতি ১০ সেকেন্ড)', 'success');
+            } else {
+                if (interval) clearInterval(interval);
+                interval = null;
+                window.showNotification('⏹️ অটো ট্রেড বন্ধ', 'info');
+            }
+        };
+
+        leftDiv.appendChild(select);
+        leftDiv.appendChild(btn);
+
+        let rightDiv = document.createElement('div');
+        rightDiv.style.display = 'flex';
+        rightDiv.style.gap = '10px';
+
+        let testBuy = document.createElement('button');
+        testBuy.textContent = '🔵 টেস্ট BUY';
+        testBuy.style.background = '#22C55E';
+        testBuy.style.color = 'white';
+        testBuy.style.border = 'none';
+        testBuy.style.borderRadius = '8px';
+        testBuy.style.padding = '8px 16px';
+        testBuy.style.cursor = 'pointer';
+        testBuy.onclick = () => { if (window.executeTrade) window.executeTrade('buy'); else alert('executeTrade নেই'); };
+
+        let testSell = document.createElement('button');
+        testSell.textContent = '🔴 টেস্ট SELL';
+        testSell.style.background = '#EF4444';
+        testSell.style.color = 'white';
+        testSell.style.border = 'none';
+        testSell.style.borderRadius = '8px';
+        testSell.style.padding = '8px 16px';
+        testSell.style.cursor = 'pointer';
+        testSell.onclick = () => { if (window.executeTrade) window.executeTrade('sell'); else alert('executeTrade নেই'); };
+
+        rightDiv.appendChild(testBuy);
+        rightDiv.appendChild(testSell);
+
+        panel.appendChild(leftDiv);
+        panel.appendChild(rightDiv);
+        footer.appendChild(panel);
+    }
+
+    window.addEventListener('load', () => {
+        addPanel();
+        if (enabled && window.currentUser) {
+            interval = setInterval(checkAndTrade, 10000);
+            setTimeout(checkAndTrade, 2000);
+        }
+    });
+})();
+        // ========== ৩. জোর করে চেক বাটন (টেস্টিংয়ের জন্য) ==========
+(function() {
+    function addForceBtn() {
+        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
+        if (!footer) { setTimeout(addForceBtn, 500); return; }
+        if (document.getElementById('forceBtn')) return;
+        let btn = document.createElement('button');
+        btn.id = 'forceBtn';
+        btn.textContent = '🔍 এখনই ট্রেড চেক করো';
+        btn.style.background = '#F59E0B';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '8px';
+        btn.style.padding = '8px 16px';
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => {
+            let rsi = parseFloat(document.getElementById('rsiValue')?.innerText) || 0;
+            let conf = parseFloat(document.getElementById('finalConfidence')?.innerText) || 0;
+            alert(`RSI = ${rsi}\nConfidence = ${conf}%`);
+            if (conf >= 85 && rsi < 30) window.executeTrade('buy');
+            else if (conf >= 85 && rsi > 70) window.executeTrade('sell');
+            else alert('শর্ত পূরণ হয়নি');
+        };
+        footer.appendChild(btn);
+    }
+    window.addEventListener('load', addForceBtn);
+})();
     </script>
+    
 </body>
 </html>
