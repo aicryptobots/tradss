@@ -3438,26 +3438,38 @@
                     }, 3000);
                 }
             })();
-        // ==================== AUTO TRADING BOT (with TIMEFRAME SELECTOR) ====================
-// Confidence threshold: 85% (changed from 95%)
+     // ==================== অটো ট্রেডিং বট (ডিবাগ ভার্সন) ====================
 let autoTradeEnabled = false;
 let autoTradeInterval = null;
 let lastAutoTradeTime = 0;
-const AUTO_TRADE_COOLDOWN_MS = 60000; // 1 minute
+const COOLDOWN_MS = 60000;
 let selectedTimeframe = '5m';
 
-// Create timeframe selector and add to UI
-function addAutoTradeControls() {
+// UI কন্ট্রোল যোগ করা
+function addAutoTradePanel() {
     const footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-    if (!footer) return;
-    if (document.getElementById('autoTradeBtn')) return;
-    
-    const controlsDiv = document.createElement('div');
-    controlsDiv.style.display = 'flex';
-    controlsDiv.style.gap = '10px';
-    controlsDiv.style.alignItems = 'center';
-    controlsDiv.style.flexWrap = 'wrap';
-    
+    if (!footer) {
+        console.error('Footer not found');
+        return;
+    }
+    if (document.getElementById('autoTradePanel')) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'autoTradePanel';
+    panel.style.display = 'flex';
+    panel.style.flexWrap = 'wrap';
+    panel.style.gap = '10px';
+    panel.style.marginTop = '10px';
+    panel.style.alignItems = 'center';
+    panel.style.justifyContent = 'space-between';
+    panel.style.width = '100%';
+
+    // Left side: Timeframe + Start/Stop
+    const leftDiv = document.createElement('div');
+    leftDiv.style.display = 'flex';
+    leftDiv.style.gap = '10px';
+    leftDiv.style.alignItems = 'center';
+
     const select = document.createElement('select');
     select.id = 'autoTradeTimeframe';
     select.style.background = '#1A1F33';
@@ -3465,146 +3477,216 @@ function addAutoTradeControls() {
     select.style.borderRadius = '8px';
     select.style.padding = '8px 12px';
     select.style.color = 'white';
-    select.style.fontSize = '0.85rem';
-    select.style.cursor = 'pointer';
-    
-    const timeframes = ['1m', '5m', '15m', '1h', '4h', '1D'];
-    timeframes.forEach(tf => {
-        const option = document.createElement('option');
-        option.value = tf;
-        option.textContent = tf;
-        if (tf === selectedTimeframe) option.selected = true;
-        select.appendChild(option);
+    ['1m','5m','15m','1h','4h','1D'].forEach(tf => {
+        const opt = document.createElement('option');
+        opt.value = tf;
+        opt.textContent = tf;
+        if (tf === selectedTimeframe) opt.selected = true;
+        select.appendChild(opt);
     });
     select.onchange = (e) => {
         selectedTimeframe = e.target.value;
-        showNotification(`Auto trading timeframe changed to ${selectedTimeframe}`, 'info');
+        showNotification(`Auto timeframe: ${selectedTimeframe}`, 'info');
     };
-    
-    const btn = document.createElement('button');
-    btn.id = 'autoTradeBtn';
-    btn.className = 'trade-action-btn';
-    btn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
-    btn.style.color = 'white';
-    btn.innerHTML = '🤖 Start Auto Trading';
-    btn.onclick = toggleAutoTrade;
-    
-    controlsDiv.appendChild(select);
-    controlsDiv.appendChild(btn);
-    footer.appendChild(controlsDiv);
+
+    const startStopBtn = document.createElement('button');
+    startStopBtn.id = 'autoTradeBtn';
+    startStopBtn.textContent = '🤖 Start Auto Trading';
+    startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
+    startStopBtn.style.color = 'white';
+    startStopBtn.style.border = 'none';
+    startStopBtn.style.borderRadius = '8px';
+    startStopBtn.style.padding = '8px 16px';
+    startStopBtn.style.cursor = 'pointer';
+    startStopBtn.onclick = () => toggleAutoTrade(startStopBtn);
+
+    leftDiv.appendChild(select);
+    leftDiv.appendChild(startStopBtn);
+
+    // Right side: Manual test buttons
+    const rightDiv = document.createElement('div');
+    rightDiv.style.display = 'flex';
+    rightDiv.style.gap = '10px';
+
+    const testBuyBtn = document.createElement('button');
+    testBuyBtn.textContent = '🔵 Test BUY (Force)';
+    testBuyBtn.style.background = '#22C55E';
+    testBuyBtn.style.color = 'white';
+    testBuyBtn.style.border = 'none';
+    testBuyBtn.style.borderRadius = '8px';
+    testBuyBtn.style.padding = '8px 16px';
+    testBuyBtn.style.cursor = 'pointer';
+    testBuyBtn.onclick = () => forceTrade('buy');
+
+    const testSellBtn = document.createElement('button');
+    testSellBtn.textContent = '🔴 Test SELL (Force)';
+    testSellBtn.style.background = '#EF4444';
+    testSellBtn.style.color = 'white';
+    testSellBtn.style.border = 'none';
+    testSellBtn.style.borderRadius = '8px';
+    testSellBtn.style.padding = '8px 16px';
+    testSellBtn.style.cursor = 'pointer';
+    testSellBtn.onclick = () => forceTrade('sell');
+
+    rightDiv.appendChild(testBuyBtn);
+    rightDiv.appendChild(testSellBtn);
+
+    panel.appendChild(leftDiv);
+    panel.appendChild(rightDiv);
+    footer.appendChild(panel);
 }
 
-function toggleAutoTrade() {
+function toggleAutoTrade(btn) {
     autoTradeEnabled = !autoTradeEnabled;
-    const btn = document.getElementById('autoTradeBtn');
     if (autoTradeEnabled) {
-        btn.innerHTML = '⏸️ Stop Auto Trading';
-        startAutoTradeLoop();
-        showNotification(`🤖 Auto trading ENABLED (${selectedTimeframe} timeframe, 85% confidence threshold)`, 'success');
+        btn.textContent = '⏸️ Stop Auto Trading';
+        startAutoLoop();
+        showNotification(`✅ Auto trading ENABLED (${selectedTimeframe}, 85% confidence)`, 'success');
     } else {
-        btn.innerHTML = '🤖 Start Auto Trading';
-        stopAutoTradeLoop();
+        btn.textContent = '🤖 Start Auto Trading';
+        stopAutoLoop();
         showNotification('⏹️ Auto trading DISABLED', 'info');
     }
 }
 
-function startAutoTradeLoop() {
+function startAutoLoop() {
     if (autoTradeInterval) clearInterval(autoTradeInterval);
-    setTimeout(() => executeAutoTrade(), 1000);
-    autoTradeInterval = setInterval(() => executeAutoTrade(), AUTO_TRADE_COOLDOWN_MS);
+    setTimeout(() => executeAutoTrade(), 2000);
+    autoTradeInterval = setInterval(() => executeAutoTrade(), COOLDOWN_MS);
 }
 
-function stopAutoTradeLoop() {
+function stopAutoLoop() {
     if (autoTradeInterval) {
         clearInterval(autoTradeInterval);
         autoTradeInterval = null;
     }
 }
 
-async function fetchAutoTradeCandles() {
-    const symbol = currentSymbol || 'BTCUSDT';
+// ফোর্স ট্রেড (টেস্টিং)
+function forceTrade(type) {
+    if (!currentUser) {
+        showNotification('Please login first', 'error');
+        return;
+    }
+    const userData = usersData[currentUser]?.tradingData;
+    if (!userData) return;
+    if (userData.positions && userData.positions.length > 0) {
+        showNotification('Open position exists. Close it first.', 'warning');
+        return;
+    }
+    const amount = 20;
+    document.getElementById('tradeAmount').value = amount;
+    if (typeof executeTrade === 'function') {
+        executeTrade(type);
+        showNotification(`🔧 Manual ${type.toUpperCase()} executed for testing`, 'info');
+    } else {
+        showNotification('executeTrade function not found!', 'error');
+    }
+}
+
+// মূল অটো ট্রেড ফাংশন – এখন সব কন্ডিশন কনসোলে লগ করবে
+async function executeAutoTrade() {
+    if (!autoTradeEnabled) {
+        console.log('Auto trade: Disabled');
+        return;
+    }
+    if (!currentUser) {
+        console.log('Auto trade: No user');
+        return;
+    }
+    const userData = usersData[currentUser]?.tradingData;
+    if (!userData) {
+        console.log('Auto trade: No trading data');
+        return;
+    }
+    if (userData.positions && userData.positions.length > 0) {
+        console.log('Auto trade: Open position exists -> skip');
+        return;
+    }
+
+    // 1. ফ্রেশ ডাটা আনা (Binance API)
+    const symbol = (typeof currentSymbol !== 'undefined' && currentSymbol) ? currentSymbol : 'BTCUSDT';
     let binanceInterval = selectedTimeframe;
     if (selectedTimeframe === '1D') binanceInterval = '1d';
     if (selectedTimeframe === '1h') binanceInterval = '1h';
     if (selectedTimeframe === '4h') binanceInterval = '4h';
-    
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval}&limit=50`;
+    
+    let candles;
     try {
-        const response = await axios.get(url);
-        return response.data.map(k => ({
-            time: k[0],
-            open: parseFloat(k[1]),
+        const res = await axios.get(url);
+        candles = res.data.map(k => ({
+            close: parseFloat(k[4]),
             high: parseFloat(k[2]),
             low: parseFloat(k[3]),
-            close: parseFloat(k[4]),
+            open: parseFloat(k[1]),
             volume: parseFloat(k[5])
         }));
-    } catch (error) {
-        console.error('Auto trade: Failed to fetch candles', error);
-        return null;
+    } catch(e) {
+        console.error('Binance API error:', e);
+        showNotification('Failed to fetch market data', 'error');
+        return;
     }
-}
+    if (!candles || candles.length < 20) return;
 
-function calculateAutoRSI(candles, period = 14) {
-    if (!candles || candles.length < period + 1) return 50;
+    const currentPrice = candles[candles.length-1].close;
+    // RSI calculation
     const closes = candles.map(c => c.close);
-    let gains = 0, losses = 0;
-    for (let i = 1; i < closes.length; i++) {
-        const diff = closes[i] - closes[i-1];
-        if (diff >= 0) gains += diff;
-        else losses -= diff;
+    let rsi = 50;
+    if (closes.length >= 15) {
+        let gains = 0, losses = 0;
+        for (let i=1; i<closes.length; i++) {
+            const diff = closes[i] - closes[i-1];
+            if (diff >= 0) gains += diff;
+            else losses -= diff;
+        }
+        const avgGain = gains / 14;
+        const avgLoss = losses / 14;
+        if (avgLoss !== 0) {
+            const rs = avgGain / avgLoss;
+            rsi = 100 - (100 / (1 + rs));
+        }
     }
-    const avgGain = gains / period;
-    const avgLoss = losses / period;
-    if (avgLoss === 0) return 100;
-    const rs = avgGain / avgLoss;
-    return 100 - (100 / (1 + rs));
-}
-
-function calculateAutoSupportResistance(candles) {
+    // Support/Resistance
     const highs = candles.map(c => c.high);
     const lows = candles.map(c => c.low);
-    const recentHigh = Math.max(...highs.slice(-20));
-    const recentLow = Math.min(...lows.slice(-20));
-    return { support: recentLow, resistance: recentHigh };
-}
-
-async function executeAutoTrade() {
-    if (!autoTradeEnabled) return;
-    if (!currentUser) return;
+    const support = Math.min(...lows.slice(-20));
+    const resistance = Math.max(...highs.slice(-20));
     
-    const userData = usersData[currentUser]?.tradingData;
-    if (!userData) return;
-    if (userData.positions && userData.positions.length > 0) return;
-    
-    const candles = await fetchAutoTradeCandles();
-    if (!candles || candles.length === 0) return;
-    
-    const currentPrice = candles[candles.length-1].close;
-    const rsi = calculateAutoRSI(candles, 14);
-    const { support, resistance } = calculateAutoSupportResistance(candles);
-    
-    let confidence = 0;
     const isSupportZone = currentPrice <= support * 1.005;
     const isResistanceZone = currentPrice >= resistance * 0.995;
     
+    // কনফিডেন্স ক্যালকুলেশন (85% base)
+    let confidence = 0;
     let action = null;
     if (isSupportZone && rsi < 30) {
-        confidence = Math.min(99, 85 + (30 - rsi) * 0.5); // base 85 instead of 95
+        confidence = Math.min(99, 85 + (30 - rsi) * 0.5);
         if (confidence >= 85) action = 'buy';
     } else if (isResistanceZone && rsi > 70) {
-        confidence = Math.min(99, 85 + (rsi - 70) * 0.5); // base 85 instead of 95
+        confidence = Math.min(99, 85 + (rsi - 70) * 0.5);
         if (confidence >= 85) action = 'sell';
     }
     
-    if (!action) {
-        console.log(`Auto trade: No action. SupportZone=${isSupportZone}, RSI=${rsi.toFixed(2)}`);
+    // কনসোলে বিস্তারিত লগ
+    console.log('======== AUTO TRADE CHECK ========');
+    console.log(`Timeframe: ${selectedTimeframe} | Symbol: ${symbol}`);
+    console.log(`Price: $${currentPrice.toFixed(2)} | Support: $${support.toFixed(2)} | Resistance: $${resistance.toFixed(2)}`);
+    console.log(`Support zone: ${isSupportZone} | Resistance zone: ${isResistanceZone}`);
+    console.log(`RSI: ${rsi.toFixed(2)}`);
+    console.log(`Confidence: ${confidence.toFixed(1)}% | Action: ${action || 'none'}`);
+    console.log(`Cooldown remaining: ${lastAutoTradeTime ? Math.max(0, COOLDOWN_MS - (Date.now() - lastAutoTradeTime)) : 0} ms`);
+    console.log('==================================');
+    
+    if (!action) return;
+    
+    // কুলডাউন চেক
+    const now = Date.now();
+    if (now - lastAutoTradeTime < COOLDOWN_MS) {
+        console.log('Auto trade: Cooldown active');
         return;
     }
     
-    const now = Date.now();
-    if (now - lastAutoTradeTime < AUTO_TRADE_COOLDOWN_MS) return;
-    
+    // ট্রেড এক্সিকিউট
     const tradeAmount = 20;
     const amountInput = document.getElementById('tradeAmount');
     if (amountInput) amountInput.value = tradeAmount;
@@ -3612,15 +3694,19 @@ async function executeAutoTrade() {
     if (typeof executeTrade === 'function') {
         executeTrade(action);
         lastAutoTradeTime = now;
-        showNotification(`🤖 Auto trade (${selectedTimeframe}): ${action.toUpperCase()} @ $${currentPrice.toFixed(2)} (${confidence.toFixed(1)}% conf)`, 'success');
-        console.log(`Auto trade executed: ${action} at ${currentPrice}, RSI=${rsi.toFixed(2)}, Confidence=${confidence.toFixed(1)}%`);
+        showNotification(`🤖 Auto ${action.toUpperCase()} | ${selectedTimeframe} | $${currentPrice.toFixed(2)} (${confidence.toFixed(0)}% conf)`, 'success');
+        console.log(`✅ Auto trade EXECUTED: ${action}`);
+    } else {
+        console.error('executeTrade function is not defined!');
+        showNotification('Error: executeTrade not found', 'error');
     }
 }
 
+// পেজ লোড হলে প্যানেল যোগ করা
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addAutoTradeControls);
+    document.addEventListener('DOMContentLoaded', addAutoTradePanel);
 } else {
-    addAutoTradeControls();
+    addAutoTradePanel();
 }
         </script>
     </div>
