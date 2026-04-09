@@ -6460,6 +6460,49 @@ window.executeTrade = function(type) {
         }
     });
 })();
+        // ========== অটো ক্লোজ (স্টপ লস + টেক প্রফিট) ==========
+function autoClosePositions() {
+    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+    if (!user) return;
+    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+    if (!data || !data[user]) return;
+    let userData = data[user].tradingData;
+    if (!userData || !userData.positions || userData.positions.length === 0) return;
+
+    let priceElem = document.getElementById('currentPriceLarge');
+    let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
+    if (!currentPrice) return;
+
+    let TP_PERCENT = 0.01;   // 1% লাভে ক্লোজ করবে
+    let SL_PERCENT = 0.005;  // 0.5% লোকসানে ক্লোজ করবে
+
+    let updated = false;
+    for (let i = 0; i < userData.positions.length; i++) {
+        let pos = userData.positions[i];
+        let pnlPercent = (pos.type === 'buy') 
+            ? (currentPrice - pos.entryPrice) / pos.entryPrice 
+            : (pos.entryPrice - currentPrice) / pos.entryPrice;
+        
+        if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
+            // ক্লোজ করুন
+            let pnl = pnlPercent * pos.positionSize;
+            userData.balance += pos.amount + pnl;
+            userData.totalTrades = (userData.totalTrades || 0) + 1;
+            if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
+            userData.totalProfit = (userData.totalProfit || 0) + pnl;
+            userData.positions.splice(i, 1);
+            updated = true;
+            i--;
+            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`;
+            if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
+            else alert(msg);
+        }
+    }
+    if (updated) {
+        localStorage.setItem('usersData', JSON.stringify(data));
+        if (typeof loadUserTradingData === 'function') loadUserTradingData();
+    }
+}
     </script>
     
 </body>
