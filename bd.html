@@ -6204,7 +6204,94 @@ window.executeTrade = function(type) {
     alert(`✅ ${type.toUpperCase()} order placed! Amount: $${amount} @ $${price}`);
 };
 
-// ==================== 2. AUTO TRADING BOT (USES RECOMMENDATION BOX SIGNAL) ====================
+// ==================== 1. EXECUTE TRADE FUNCTION ====================
+window.executeTrade = function(type) {
+    console.log('executeTrade called with type:', type);
+    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+    if (!user) {
+        alert('Please login first');
+        return;
+    }
+    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+    if (!data || !data[user]) {
+        alert('No trading data found');
+        return;
+    }
+    let userData = data[user].tradingData;
+    if (!userData) {
+        alert('Trading data missing');
+        return;
+    }
+    if (userData.positions && userData.positions.length > 0) {
+        alert('Close existing position first');
+        return;
+    }
+    let amount = 20;
+    let priceElem = document.getElementById('currentPriceLarge');
+    let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
+    let position = {
+        id: Date.now(),
+        symbol: 'BTCUSDT',
+        type: type,
+        amount: amount,
+        leverage: 1,
+        positionSize: amount,
+        entryPrice: price,
+        timestamp: new Date().toLocaleTimeString()
+    };
+    userData.positions.push(position);
+    userData.balance -= amount;
+    userData.totalTrades = (userData.totalTrades || 0) + 1;
+    localStorage.setItem('usersData', JSON.stringify(data));
+    if (typeof loadUserTradingData === 'function') loadUserTradingData();
+    alert(`✅ ${type.toUpperCase()} order placed! Amount: $${amount} @ $${price}`);
+};
+
+// ==================== 2. AUTO CLOSE POSITIONS (TP 1% / SL 0.5%) ====================
+function autoClosePositions() {
+    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+    if (!user) return;
+    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+    if (!data || !data[user]) return;
+    let userData = data[user].tradingData;
+    if (!userData || !userData.positions || userData.positions.length === 0) return;
+
+    let priceElem = document.getElementById('currentPriceLarge');
+    let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
+    if (!currentPrice) return;
+
+    const TP_PERCENT = 0.01;   // 1% profit
+    const SL_PERCENT = 0.005;  // 0.5% loss
+
+    let updated = false;
+    for (let i = 0; i < userData.positions.length; i++) {
+        let pos = userData.positions[i];
+        let pnlPercent = (pos.type === 'buy') 
+            ? (currentPrice - pos.entryPrice) / pos.entryPrice 
+            : (pos.entryPrice - currentPrice) / pos.entryPrice;
+        
+        if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
+            // Close position
+            let pnl = pnlPercent * pos.positionSize;
+            userData.balance += pos.amount + pnl;
+            userData.totalTrades = (userData.totalTrades || 0) + 1;
+            if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
+            userData.totalProfit = (userData.totalProfit || 0) + pnl;
+            userData.positions.splice(i, 1);
+            updated = true;
+            i--;
+            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`;
+            if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
+            else alert(msg);
+        }
+    }
+    if (updated) {
+        localStorage.setItem('usersData', JSON.stringify(data));
+        if (typeof loadUserTradingData === 'function') loadUserTradingData();
+    }
+}
+
+// ==================== 3. AUTO TRADING BOT (USES RECOMMENDATION SIGNAL + RSI) ====================
 (function() {
     let enabled = false;
     let interval = null;
@@ -6212,11 +6299,9 @@ window.executeTrade = function(type) {
     const COOLDOWN = 60000; // 1 minute
     let selectedTF = '5m';
 
-    // Load saved state
     if (localStorage.getItem('autoTradeEnabled') === 'true') enabled = true;
     if (localStorage.getItem('autoTradeTF')) selectedTF = localStorage.getItem('autoTradeTF');
 
-    // Get the final signal from the Ultimate Recommendation box
     function getFinalSignal() {
         let signalElem = document.getElementById('finalSignal');
         if (signalElem) {
@@ -6224,7 +6309,6 @@ window.executeTrade = function(type) {
             if (text === 'BUY') return 'buy';
             if (text === 'SELL') return 'sell';
         }
-        // fallback: try the class inside the final-signal div
         let signalDiv = document.querySelector('.final-signal .signal-text');
         if (signalDiv) {
             let text = signalDiv.innerText.trim().toUpperCase();
@@ -6234,7 +6318,6 @@ window.executeTrade = function(type) {
         return null;
     }
 
-    // Get RSI from the chart (rsiValue element)
     function getRSI() {
         let val = document.getElementById('rsiValue')?.innerText;
         if (val && !isNaN(parseFloat(val))) return parseFloat(val);
@@ -6243,8 +6326,18 @@ window.executeTrade = function(type) {
         return 50;
     }
 
-    // Main check function
+    let statusDiv = null;
+    function updateStatusDisplay(msg) {
+        if (statusDiv) {
+            statusDiv.innerHTML = msg;
+            statusDiv.style.color = msg.includes('✅') ? '#22C55E' : (msg.includes('🔴') ? '#EF4444' : '#F59E0B');
+        }
+    }
+
     function checkAndTrade() {
+        // First, auto-close any positions that hit TP/SL
+        autoClosePositions();
+
         if (!enabled) {
             updateStatusDisplay('⏸️ Auto trade OFF');
             return;
@@ -6299,16 +6392,6 @@ window.executeTrade = function(type) {
         }
     }
 
-    // Status display
-    let statusDiv = null;
-    function updateStatusDisplay(msg) {
-        if (statusDiv) {
-            statusDiv.innerHTML = msg;
-            statusDiv.style.color = msg.includes('✅') ? '#22C55E' : (msg.includes('🔴') ? '#EF4444' : '#F59E0B');
-        }
-    }
-
-    // Create UI panel (timeframe, start/stop, test buttons)
     function addPanel() {
         let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
         if (!footer) { setTimeout(addPanel, 500); return; }
@@ -6324,7 +6407,6 @@ window.executeTrade = function(type) {
         panel.style.justifyContent = 'space-between';
         panel.style.width = '100%';
 
-        // Left side: timeframe + start/stop
         let leftDiv = document.createElement('div');
         leftDiv.style.display = 'flex';
         leftDiv.style.gap = '10px';
@@ -6366,7 +6448,7 @@ window.executeTrade = function(type) {
                 if (interval) clearInterval(interval);
                 interval = setInterval(checkAndTrade, 10000);
                 checkAndTrade();
-                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED (using recommendation box signal + RSI)', 'success');
+                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED (Signal + RSI)', 'success');
             } else {
                 if (interval) clearInterval(interval);
                 interval = null;
@@ -6377,7 +6459,6 @@ window.executeTrade = function(type) {
         leftDiv.appendChild(select);
         leftDiv.appendChild(btn);
 
-        // Right side: test buttons
         let rightDiv = document.createElement('div');
         rightDiv.style.display = 'flex';
         rightDiv.style.gap = '10px';
@@ -6409,7 +6490,6 @@ window.executeTrade = function(type) {
         panel.appendChild(rightDiv);
         footer.appendChild(panel);
 
-        // Add status display below the panel
         statusDiv = document.createElement('div');
         statusDiv.id = 'autoStatus';
         statusDiv.style.marginTop = '10px';
@@ -6423,7 +6503,6 @@ window.executeTrade = function(type) {
         footer.parentNode.insertBefore(statusDiv, footer.nextSibling);
     }
 
-    // Restart after login
     function onLogin() {
         if (enabled) {
             if (interval) clearInterval(interval);
@@ -6460,49 +6539,6 @@ window.executeTrade = function(type) {
         }
     });
 })();
-        // ========== অটো ক্লোজ (স্টপ লস + টেক প্রফিট) ==========
-function autoClosePositions() {
-    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-    if (!user) return;
-    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-    if (!data || !data[user]) return;
-    let userData = data[user].tradingData;
-    if (!userData || !userData.positions || userData.positions.length === 0) return;
-
-    let priceElem = document.getElementById('currentPriceLarge');
-    let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
-    if (!currentPrice) return;
-
-    let TP_PERCENT = 0.01;   // 1% লাভে ক্লোজ করবে
-    let SL_PERCENT = 0.005;  // 0.5% লোকসানে ক্লোজ করবে
-
-    let updated = false;
-    for (let i = 0; i < userData.positions.length; i++) {
-        let pos = userData.positions[i];
-        let pnlPercent = (pos.type === 'buy') 
-            ? (currentPrice - pos.entryPrice) / pos.entryPrice 
-            : (pos.entryPrice - currentPrice) / pos.entryPrice;
-        
-        if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
-            // ক্লোজ করুন
-            let pnl = pnlPercent * pos.positionSize;
-            userData.balance += pos.amount + pnl;
-            userData.totalTrades = (userData.totalTrades || 0) + 1;
-            if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
-            userData.totalProfit = (userData.totalProfit || 0) + pnl;
-            userData.positions.splice(i, 1);
-            updated = true;
-            i--;
-            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`;
-            if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
-            else alert(msg);
-        }
-    }
-    if (updated) {
-        localStorage.setItem('usersData', JSON.stringify(data));
-        if (typeof loadUserTradingData === 'function') loadUserTradingData();
-    }
-}
     </script>
     
 </body>
