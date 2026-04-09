@@ -6161,12 +6161,12 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-    // ==================== FIXED EXECUTE TRADE (uses your global variables) ====================
+   // ==================== 1. EXECUTE TRADE FUNCTION (FIXED) ====================
 window.executeTrade = function(type) {
-    console.log('executeTrade called with', type);
+    console.log('executeTrade called with type:', type);
     let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
     if (!user) {
-        alert('❌ Not logged in. Please login first.');
+        alert('Please login first');
         return;
     }
     let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
@@ -6202,10 +6202,9 @@ window.executeTrade = function(type) {
     localStorage.setItem('usersData', JSON.stringify(data));
     if (typeof loadUserTradingData === 'function') loadUserTradingData();
     alert(`✅ ${type.toUpperCase()} order placed! Amount: $${amount} @ $${price}`);
-    console.log(`Trade executed: ${type} at ${price}`);
 };
 
-// ==================== AUTO TRADING BOT (FOLLOWS RECOMMENDATION BOX) ====================
+// ==================== 2. AUTO TRADING BOT (USES RECOMMENDATION BOX SIGNAL) ====================
 (function() {
     let enabled = false;
     let interval = null;
@@ -6217,21 +6216,31 @@ window.executeTrade = function(type) {
     if (localStorage.getItem('autoTradeEnabled') === 'true') enabled = true;
     if (localStorage.getItem('autoTradeTF')) selectedTF = localStorage.getItem('autoTradeTF');
 
-    // Read signal from Ultimate Recommendation Box
-    function getRecommendationSignal() {
+    // Get the final signal from the Ultimate Recommendation box
+    function getFinalSignal() {
         let signalElem = document.getElementById('finalSignal');
-        if (!signalElem) return null;
-        let signalText = signalElem.innerText.trim().toUpperCase();
-        if (signalText === 'BUY') return 'buy';
-        if (signalText === 'SELL') return 'sell';
+        if (signalElem) {
+            let text = signalElem.innerText.trim().toUpperCase();
+            if (text === 'BUY') return 'buy';
+            if (text === 'SELL') return 'sell';
+        }
+        // fallback: try the class inside the final-signal div
+        let signalDiv = document.querySelector('.final-signal .signal-text');
+        if (signalDiv) {
+            let text = signalDiv.innerText.trim().toUpperCase();
+            if (text === 'BUY') return 'buy';
+            if (text === 'SELL') return 'sell';
+        }
         return null;
     }
 
-    function getRecommendationConfidence() {
-        let confElem = document.getElementById('finalConfidence');
-        if (!confElem) return 0;
-        let val = parseFloat(confElem.innerText);
-        return isNaN(val) ? 0 : val;
+    // Get RSI from the chart (rsiValue element)
+    function getRSI() {
+        let val = document.getElementById('rsiValue')?.innerText;
+        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
+        val = document.getElementById('ultRsi')?.innerText;
+        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
+        return 50;
     }
 
     // Main check function
@@ -6260,31 +6269,30 @@ window.executeTrade = function(type) {
             return;
         }
 
-        let signal = getRecommendationSignal();
-        let confidence = getRecommendationConfidence();
+        let signal = getFinalSignal();
+        let rsi = getRSI();
         let now = Date.now();
         let cooldownLeft = Math.max(0, COOLDOWN - (now - lastTradeTime));
 
-        let statusMsg = `🔄 Recommendation: ${signal ? signal.toUpperCase() : 'NEUTRAL'} | Confidence: ${confidence.toFixed(0)}%`;
+        let action = null;
+        if (signal === 'buy' && rsi < 30) action = 'buy';
+        else if (signal === 'sell' && rsi > 70) action = 'sell';
+
+        let statusMsg = `🔄 Signal: ${signal ? signal.toUpperCase() : 'NONE'} | RSI=${rsi.toFixed(1)} | ${action ? 'Action: '+action.toUpperCase() : 'No action'}`;
         if (cooldownLeft > 0) statusMsg += ` | Cooldown: ${Math.ceil(cooldownLeft/1000)}s`;
         updateStatusDisplay(statusMsg);
 
-        if (!signal) return;
-        if (confidence < 85) {
-            updateStatusDisplay(statusMsg + ` (confidence <85%)`);
-            return;
-        }
+        if (!action) return;
         if (cooldownLeft > 0) return;
 
-        // Execute trade based on recommendation signal
         if (typeof window.executeTrade === 'function') {
-            window.executeTrade(signal);
+            window.executeTrade(action);
             lastTradeTime = now;
-            updateStatusDisplay(`✅ ${signal.toUpperCase()} trade executed! (Confidence: ${confidence}%)`);
+            updateStatusDisplay(`✅ ${action.toUpperCase()} trade executed!`);
             if (typeof showNotification === 'function') {
-                showNotification(`🤖 AUTO ${signal.toUpperCase()} (Rec. box) | Conf:${confidence.toFixed(0)}%`, 'success');
+                showNotification(`🤖 AUTO ${action.toUpperCase()} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
             } else {
-                alert(`Auto ${signal.toUpperCase()} placed!`);
+                alert(`Auto ${action.toUpperCase()} placed!`);
             }
         } else {
             updateStatusDisplay('❌ executeTrade function missing');
@@ -6300,7 +6308,7 @@ window.executeTrade = function(type) {
         }
     }
 
-    // Create UI panel
+    // Create UI panel (timeframe, start/stop, test buttons)
     function addPanel() {
         let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
         if (!footer) { setTimeout(addPanel, 500); return; }
@@ -6358,7 +6366,7 @@ window.executeTrade = function(type) {
                 if (interval) clearInterval(interval);
                 interval = setInterval(checkAndTrade, 10000);
                 checkAndTrade();
-                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED (following Recommendation box)', 'success');
+                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED (using recommendation box signal + RSI)', 'success');
             } else {
                 if (interval) clearInterval(interval);
                 interval = null;
