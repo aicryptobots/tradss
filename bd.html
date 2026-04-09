@@ -6226,7 +6226,7 @@ window.executeTrade = function(type) {
         alert('Close existing position first');
         return;
     }
-    let amount = 20;
+    let amount = 500;
     let priceElem = document.getElementById('currentPriceLarge');
     let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
     let position = {
