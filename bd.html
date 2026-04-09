@@ -6739,12 +6739,12 @@ function autoClosePositions() {
     // Initialize button on page load
     window.addEventListener('load', addHistoryButton);
 })();
-// ==================== AUDIO ALERT FEATURE (PERSISTENT) ====================
+// ==================== AUDIO ALERT FEATURE (UPDATED MESSAGES) ====================
 (function() {
     // Load saved state
     let audioEnabled = localStorage.getItem('audioAlertsEnabled') === 'true';
     
-    // Function to speak a message 5 times
+    // Function to speak a message 5 times slowly
     function speakMessage(message) {
         if (!audioEnabled) return;
         let count = 0;
@@ -6752,12 +6752,13 @@ function autoClosePositions() {
             if (!audioEnabled) return;
             let utterance = new SpeechSynthesisUtterance(message);
             utterance.lang = 'en-US';
-            utterance.rate = 0.9;
+            utterance.rate = 0.7;   // slower rate
+            utterance.pitch = 1;
             window.speechSynthesis.cancel(); // stop any ongoing speech
             window.speechSynthesis.speak(utterance);
             count++;
             if (count < 5) {
-                setTimeout(speak, 1200); // wait 1.2 seconds between repeats
+                setTimeout(speak, 1800); // wait 1.8 seconds between repeats
             }
         }
         speak();
@@ -6767,28 +6768,25 @@ function autoClosePositions() {
     if (typeof window.executeTrade === 'function') {
         const originalExecuteTrade = window.executeTrade;
         window.executeTrade = function(type) {
-            // Call original first
             originalExecuteTrade(type);
-            // Then speak
             if (type === 'buy') {
-                speakMessage('This is a right time buy trade');
+                speakMessage('Right time open buy trade');
             } else if (type === 'sell') {
-                speakMessage('This is a right time sell trade');
+                speakMessage('Right time open sell trade');
             }
         };
     }
     
-    // Hook into trade close (both manual and auto)
-    // We'll override the closePosition function if it exists
+    // Hook into manual trade close (if closePosition function exists)
     if (typeof window.closePosition === 'function') {
         const originalClosePosition = window.closePosition;
         window.closePosition = function(id) {
             originalClosePosition(id);
-            speakMessage('This is a right trade close');
+            speakMessage('Right time close trade');
         };
     }
     
-    // Also hook into autoClosePositions (which is called by the bot)
+    // Hook into auto close (autoClosePositions)
     if (typeof window.autoClosePositions === 'function') {
         const originalAutoClose = window.autoClosePositions;
         window.autoClosePositions = function() {
@@ -6804,8 +6802,7 @@ function autoClosePositions() {
                 if (userData && userData.positions) afterCloseCount = userData.positions.length;
             }
             if (beforeCloseCount > afterCloseCount) {
-                // A trade was closed
-                speakMessage('This is a right trade close');
+                speakMessage('Right time close trade');
             }
         };
     }
@@ -6849,7 +6846,7 @@ function autoClosePositions() {
     
     // Initialize button on page load
     window.addEventListener('load', addAudioToggleButton);
-})();        
+})();
     </script>
     
 </body>
