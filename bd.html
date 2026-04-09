@@ -6739,6 +6739,117 @@ function autoClosePositions() {
     // Initialize button on page load
     window.addEventListener('load', addHistoryButton);
 })();
+// ==================== AUDIO ALERT FEATURE (PERSISTENT) ====================
+(function() {
+    // Load saved state
+    let audioEnabled = localStorage.getItem('audioAlertsEnabled') === 'true';
+    
+    // Function to speak a message 5 times
+    function speakMessage(message) {
+        if (!audioEnabled) return;
+        let count = 0;
+        function speak() {
+            if (!audioEnabled) return;
+            let utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.cancel(); // stop any ongoing speech
+            window.speechSynthesis.speak(utterance);
+            count++;
+            if (count < 5) {
+                setTimeout(speak, 1200); // wait 1.2 seconds between repeats
+            }
+        }
+        speak();
+    }
+    
+    // Hook into BUY/SELL trade execution (window.executeTrade)
+    if (typeof window.executeTrade === 'function') {
+        const originalExecuteTrade = window.executeTrade;
+        window.executeTrade = function(type) {
+            // Call original first
+            originalExecuteTrade(type);
+            // Then speak
+            if (type === 'buy') {
+                speakMessage('This is a right time buy trade');
+            } else if (type === 'sell') {
+                speakMessage('This is a right time sell trade');
+            }
+        };
+    }
+    
+    // Hook into trade close (both manual and auto)
+    // We'll override the closePosition function if it exists
+    if (typeof window.closePosition === 'function') {
+        const originalClosePosition = window.closePosition;
+        window.closePosition = function(id) {
+            originalClosePosition(id);
+            speakMessage('This is a right trade close');
+        };
+    }
+    
+    // Also hook into autoClosePositions (which is called by the bot)
+    if (typeof window.autoClosePositions === 'function') {
+        const originalAutoClose = window.autoClosePositions;
+        window.autoClosePositions = function() {
+            let beforeCloseCount = 0;
+            if (window.usersData && window.currentUser) {
+                let userData = window.usersData[window.currentUser]?.tradingData;
+                if (userData && userData.positions) beforeCloseCount = userData.positions.length;
+            }
+            originalAutoClose();
+            let afterCloseCount = 0;
+            if (window.usersData && window.currentUser) {
+                let userData = window.usersData[window.currentUser]?.tradingData;
+                if (userData && userData.positions) afterCloseCount = userData.positions.length;
+            }
+            if (beforeCloseCount > afterCloseCount) {
+                // A trade was closed
+                speakMessage('This is a right trade close');
+            }
+        };
+    }
+    
+    // Create UI toggle button (adds to the auto trading panel or footer)
+    function addAudioToggleButton() {
+        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
+        if (!footer) {
+            setTimeout(addAudioToggleButton, 500);
+            return;
+        }
+        if (document.getElementById('audioToggleBtn')) return;
+        
+        let btn = document.createElement('button');
+        btn.id = 'audioToggleBtn';
+        btn.textContent = audioEnabled ? '🔊 Audio Alerts ON' : '🔇 Audio Alerts OFF';
+        btn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '8px';
+        btn.style.padding = '8px 16px';
+        btn.style.cursor = 'pointer';
+        btn.style.marginLeft = '10px';
+        btn.onclick = () => {
+            audioEnabled = !audioEnabled;
+            localStorage.setItem('audioAlertsEnabled', audioEnabled);
+            btn.textContent = audioEnabled ? '🔊 Audio Alerts ON' : '🔇 Audio Alerts OFF';
+            btn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
+            let msg = audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled';
+            if (typeof showNotification === 'function') showNotification(msg, 'info');
+            else alert(msg);
+        };
+        
+        let existingPanel = document.getElementById('autoPanel');
+        if (existingPanel) {
+            existingPanel.appendChild(btn);
+        } else {
+            footer.appendChild(btn);
+        }
+    }
+    
+    // Initialize button on page load
+    window.addEventListener('load', addAudioToggleButton);
+})();        
     </script>
     
 </body>
