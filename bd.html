@@ -6161,50 +6161,9 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-      // ==================== 1. EXECUTE TRADE FUNCTION (FIXED) ====================
-window.executeTrade = function(type) {
-    console.log('executeTrade called with type:', type);
-    if (!window.currentUser) {
-        alert('Please login first');
-        return;
-    }
-    let userData = window.usersData[window.currentUser]?.tradingData;
-    if (!userData) {
-        alert('No trading data found');
-        return;
-    }
-    if (userData.positions && userData.positions.length > 0) {
-        alert('Close existing position first');
-        return;
-    }
-    let amount = 20;
-    let priceElem = document.getElementById('currentPriceLarge');
-    let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
-    let position = {
-        id: Date.now(),
-        symbol: 'BTCUSDT',
-        type: type,
-        amount: amount,
-        leverage: 1,
-        positionSize: amount,
-        entryPrice: price,
-        timestamp: new Date().toLocaleTimeString()
-    };
-    userData.positions.push(position);
-    userData.balance -= amount;
-    userData.totalTrades = (userData.totalTrades || 0) + 1;
-    localStorage.setItem('usersData', JSON.stringify(window.usersData));
-    if (typeof window.loadUserTradingData === 'function') {
-        window.loadUserTradingData();
-    }
-    alert(type.toUpperCase() + ' order placed!');
-    console.log('Trade executed:', type, price);
-};
-
-// ==================== FIXED EXECUTE TRADE (uses your global variables) ====================
+    // ==================== FIXED EXECUTE TRADE (uses your global variables) ====================
 window.executeTrade = function(type) {
     console.log('executeTrade called with', type);
-    // Try to get currentUser from global scope (not just window)
     let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
     if (!user) {
         alert('❌ Not logged in. Please login first.');
@@ -6246,7 +6205,7 @@ window.executeTrade = function(type) {
     console.log(`Trade executed: ${type} at ${price}`);
 };
 
-// ==================== AUTO TRADING BOT WITH STATUS DISPLAY ====================
+// ==================== AUTO TRADING BOT (FOLLOWS RECOMMENDATION BOX) ====================
 (function() {
     let enabled = false;
     let interval = null;
@@ -6258,18 +6217,21 @@ window.executeTrade = function(type) {
     if (localStorage.getItem('autoTradeEnabled') === 'true') enabled = true;
     if (localStorage.getItem('autoTradeTF')) selectedTF = localStorage.getItem('autoTradeTF');
 
-    // Helper functions to read values from screen
-    function getRSI() {
-        let val = document.getElementById('rsiValue')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        val = document.getElementById('ultRsi')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        return 50;
+    // Read signal from Ultimate Recommendation Box
+    function getRecommendationSignal() {
+        let signalElem = document.getElementById('finalSignal');
+        if (!signalElem) return null;
+        let signalText = signalElem.innerText.trim().toUpperCase();
+        if (signalText === 'BUY') return 'buy';
+        if (signalText === 'SELL') return 'sell';
+        return null;
     }
-    function getConfidence() {
-        let val = document.getElementById('finalConfidence')?.innerText;
-        if (val && !isNaN(parseFloat(val))) return parseFloat(val);
-        return 0;
+
+    function getRecommendationConfidence() {
+        let confElem = document.getElementById('finalConfidence');
+        if (!confElem) return 0;
+        let val = parseFloat(confElem.innerText);
+        return isNaN(val) ? 0 : val;
     }
 
     // Main check function
@@ -6298,38 +6260,38 @@ window.executeTrade = function(type) {
             return;
         }
 
-        let rsi = getRSI();
-        let conf = getConfidence();
+        let signal = getRecommendationSignal();
+        let confidence = getRecommendationConfidence();
         let now = Date.now();
         let cooldownLeft = Math.max(0, COOLDOWN - (now - lastTradeTime));
-        let action = null;
-        if (conf >= 85 && rsi < 30) action = 'buy';
-        else if (conf >= 85 && rsi > 70) action = 'sell';
 
-        let statusMsg = `🔄 Checking: RSI=${rsi.toFixed(1)} | Conf=${conf.toFixed(0)}% | ${action ? 'Signal: '+action.toUpperCase() : 'No signal'}`;
+        let statusMsg = `🔄 Recommendation: ${signal ? signal.toUpperCase() : 'NEUTRAL'} | Confidence: ${confidence.toFixed(0)}%`;
         if (cooldownLeft > 0) statusMsg += ` | Cooldown: ${Math.ceil(cooldownLeft/1000)}s`;
         updateStatusDisplay(statusMsg);
 
-        if (!action) return;
+        if (!signal) return;
+        if (confidence < 85) {
+            updateStatusDisplay(statusMsg + ` (confidence <85%)`);
+            return;
+        }
         if (cooldownLeft > 0) return;
 
-        // Execute trade
+        // Execute trade based on recommendation signal
         if (typeof window.executeTrade === 'function') {
-            window.executeTrade(action);
+            window.executeTrade(signal);
             lastTradeTime = now;
-            updateStatusDisplay(`✅ ${action.toUpperCase()} trade executed!`);
-            // Also show notification if available
+            updateStatusDisplay(`✅ ${signal.toUpperCase()} trade executed! (Confidence: ${confidence}%)`);
             if (typeof showNotification === 'function') {
-                showNotification(`🤖 AUTO ${action.toUpperCase()} | RSI:${rsi.toFixed(0)} | Conf:${conf.toFixed(0)}%`, 'success');
+                showNotification(`🤖 AUTO ${signal.toUpperCase()} (Rec. box) | Conf:${confidence.toFixed(0)}%`, 'success');
             } else {
-                alert(`Auto ${action.toUpperCase()} placed!`);
+                alert(`Auto ${signal.toUpperCase()} placed!`);
             }
         } else {
             updateStatusDisplay('❌ executeTrade function missing');
         }
     }
 
-    // Create a status display div
+    // Status display
     let statusDiv = null;
     function updateStatusDisplay(msg) {
         if (statusDiv) {
@@ -6396,7 +6358,7 @@ window.executeTrade = function(type) {
                 if (interval) clearInterval(interval);
                 interval = setInterval(checkAndTrade, 10000);
                 checkAndTrade();
-                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED', 'success');
+                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED (following Recommendation box)', 'success');
             } else {
                 if (interval) clearInterval(interval);
                 interval = null;
@@ -6453,7 +6415,7 @@ window.executeTrade = function(type) {
         footer.parentNode.insertBefore(statusDiv, footer.nextSibling);
     }
 
-    // Restart bot after login
+    // Restart after login
     function onLogin() {
         if (enabled) {
             if (interval) clearInterval(interval);
@@ -6462,7 +6424,6 @@ window.executeTrade = function(type) {
         }
     }
 
-    // Hook into login/logout (if functions exist)
     if (typeof loginWithCode === 'function') {
         const origLogin = loginWithCode;
         window.loginWithCode = async function() {
