@@ -6539,6 +6539,206 @@ function autoClosePositions() {
         }
     });
 })();
+        // ==================== TRADE HISTORY FEATURE (PERSISTENT) ====================
+(function() {
+    // Add "View Trade History" button next to auto trading controls
+    function addHistoryButton() {
+        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
+        if (!footer) {
+            setTimeout(addHistoryButton, 500);
+            return;
+        }
+        if (document.getElementById('historyBtn')) return;
+
+        let btn = document.createElement('button');
+        btn.id = 'historyBtn';
+        btn.textContent = '📜 View Trade History';
+        btn.style.background = '#3B82F6';
+        btn.style.color = 'white';
+        btn.style.border = 'none';
+        btn.style.borderRadius = '8px';
+        btn.style.padding = '8px 16px';
+        btn.style.cursor = 'pointer';
+        btn.style.marginLeft = '10px';
+        btn.onclick = showTradeHistory;
+        
+        let existingPanel = document.getElementById('autoPanel');
+        if (existingPanel) {
+            existingPanel.appendChild(btn);
+        } else {
+            footer.appendChild(btn);
+        }
+    }
+
+    // Show trade history in a modal popup
+    function showTradeHistory() {
+        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+        if (!user) {
+            alert('Please login first');
+            return;
+        }
+        let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+        if (!data || !data[user]) {
+            alert('No trading data');
+            return;
+        }
+        let history = data[user].tradingData?.tradeHistory || [];
+        if (history.length === 0) {
+            alert('No trade history yet');
+            return;
+        }
+
+        let modalHtml = `
+        <div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto; box-shadow:0 0 50px rgba(0,0,0,0.8);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="color:#3B82F6;">📜 Trade History</h3>
+                <button id="closeModalBtn" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px; cursor:pointer;">Close</button>
+            </div>
+            <table style="width:100%; border-collapse:collapse; color:#E5E7EB;">
+                <thead>
+                    <tr style="background:#1A1F33;">
+                        <th style="padding:8px; text-align:left;">Date & Time</th>
+                        <th style="padding:8px; text-align:left;">Type</th>
+                        <th style="padding:8px; text-align:left;">Entry</th>
+                        <th style="padding:8px; text-align:left;">Exit</th>
+                        <th style="padding:8px; text-align:left;">P&L</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        history.forEach(trade => {
+            let pnlColor = trade.pnl >= 0 ? '#22C55E' : '#EF4444';
+            modalHtml += `
+                <tr style="border-bottom:1px solid #2A3045;">
+                    <td style="padding:8px;">${trade.date || trade.timestamp || ''}</td>
+                    <td style="padding:8px; text-transform:uppercase; color:${trade.type === 'buy' ? '#22C55E' : '#EF4444'}">${trade.type}</td>
+                    <td style="padding:8px;">$${trade.entryPrice?.toFixed(2)}</td>
+                    <td style="padding:8px;">$${trade.exitPrice?.toFixed(2)}</td>
+                    <td style="padding:8px; color:${pnlColor};">$${trade.pnl?.toFixed(2)} (${(trade.pnlPercent || 0).toFixed(1)}%)</td>
+                </tr>
+            `;
+        });
+        modalHtml += `
+                </tbody>
+            </table>
+        </div>`;
+
+        if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('closeModalBtn').onclick = () => document.getElementById('historyModal').remove();
+    }
+
+    // Override autoClosePositions to save history when TP/SL closes a trade
+    // (This replaces your existing autoClosePositions function with one that also saves history)
+    window.autoClosePositions = function() {
+        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+        if (!user) return;
+        let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+        if (!data || !data[user]) return;
+        let userData = data[user].tradingData;
+        if (!userData || !userData.positions || userData.positions.length === 0) return;
+
+        let priceElem = document.getElementById('currentPriceLarge');
+        let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
+        if (!currentPrice) return;
+
+        const TP_PERCENT = 0.01;   // 1% profit
+        const SL_PERCENT = 0.005;  // 0.5% loss
+
+        let updated = false;
+        for (let i = 0; i < userData.positions.length; i++) {
+            let pos = userData.positions[i];
+            let pnlPercent = (pos.type === 'buy') 
+                ? (currentPrice - pos.entryPrice) / pos.entryPrice 
+                : (pos.entryPrice - currentPrice) / pos.entryPrice;
+            
+            if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
+                // Create history entry
+                let historyEntry = {
+                    date: new Date().toLocaleString(),
+                    timestamp: new Date().toISOString(),
+                    type: pos.type,
+                    entryPrice: pos.entryPrice,
+                    exitPrice: currentPrice,
+                    pnl: pnlPercent * pos.positionSize,
+                    pnlPercent: pnlPercent * 100,
+                    positionSize: pos.positionSize,
+                    amount: pos.amount
+                };
+                let pnl = historyEntry.pnl;
+                // Update balance and stats
+                userData.balance += pos.amount + pnl;
+                userData.totalTrades = (userData.totalTrades || 0) + 1;
+                if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
+                userData.totalProfit = (userData.totalProfit || 0) + pnl;
+                // Remove position
+                userData.positions.splice(i, 1);
+                updated = true;
+                i--;
+                // Save to history
+                if (!userData.tradeHistory) userData.tradeHistory = [];
+                userData.tradeHistory.unshift(historyEntry);
+                if (userData.tradeHistory.length > 50) userData.tradeHistory.pop(); // keep last 50
+                
+                let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`;
+                if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
+                else alert(msg);
+            }
+        }
+        if (updated) {
+            localStorage.setItem('usersData', JSON.stringify(data));
+            if (typeof loadUserTradingData === 'function') loadUserTradingData();
+        }
+    };
+
+    // Also override manual close function (if it exists) to save history
+    if (typeof window.closePosition === 'function') {
+        const originalClose = window.closePosition;
+        window.closePosition = function(id) {
+            let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+            if (!user) return;
+            let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+            if (!data || !data[user]) return;
+            let userData = data[user].tradingData;
+            if (!userData) return;
+            let posIndex = userData.positions.findIndex(p => p.id == id);
+            if (posIndex === -1) return;
+            let pos = userData.positions[posIndex];
+            let priceElem = document.getElementById('currentPriceLarge');
+            let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : pos.entryPrice;
+            let pnlPercent = (pos.type === 'buy') 
+                ? (currentPrice - pos.entryPrice) / pos.entryPrice 
+                : (pos.entryPrice - currentPrice) / pos.entryPrice;
+            let pnl = pnlPercent * pos.positionSize;
+            let historyEntry = {
+                date: new Date().toLocaleString(),
+                timestamp: new Date().toISOString(),
+                type: pos.type,
+                entryPrice: pos.entryPrice,
+                exitPrice: currentPrice,
+                pnl: pnl,
+                pnlPercent: pnlPercent * 100,
+                positionSize: pos.positionSize,
+                amount: pos.amount
+            };
+            // Call original close function to update balance, etc.
+            originalClose(id);
+            // After original close, add to history (use timeout to ensure data is updated)
+            setTimeout(() => {
+                let newData = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+                let newUserData = newData[user].tradingData;
+                if (!newUserData.tradeHistory) newUserData.tradeHistory = [];
+                newUserData.tradeHistory.unshift(historyEntry);
+                if (newUserData.tradeHistory.length > 50) newUserData.tradeHistory.pop();
+                localStorage.setItem('usersData', JSON.stringify(newData));
+                if (typeof loadUserTradingData === 'function') loadUserTradingData();
+            }, 100);
+        };
+    }
+
+    // Initialize button on page load
+    window.addEventListener('load', addHistoryButton);
+})();
     </script>
     
 </body>
