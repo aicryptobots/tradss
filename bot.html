@@ -3438,27 +3438,26 @@
                     }, 3000);
                 }
             })();
-         // ==================== AUTO TRADING BOT (with TIMEFRAME SELECTOR) ====================
+        // ==================== AUTO TRADING BOT (with TIMEFRAME SELECTOR) ====================
+// Confidence threshold: 85% (changed from 95%)
 let autoTradeEnabled = false;
 let autoTradeInterval = null;
 let lastAutoTradeTime = 0;
 const AUTO_TRADE_COOLDOWN_MS = 60000; // 1 minute
-let selectedTimeframe = '5m'; // default timeframe for auto trading
+let selectedTimeframe = '5m';
 
 // Create timeframe selector and add to UI
 function addAutoTradeControls() {
     const footer = document.querySelector('.ultimate-rec-footer .trade-actions');
     if (!footer) return;
-    if (document.getElementById('autoTradeBtn')) return; // already added
+    if (document.getElementById('autoTradeBtn')) return;
     
-    // Create a container div for controls
     const controlsDiv = document.createElement('div');
     controlsDiv.style.display = 'flex';
     controlsDiv.style.gap = '10px';
     controlsDiv.style.alignItems = 'center';
     controlsDiv.style.flexWrap = 'wrap';
     
-    // Timeframe dropdown
     const select = document.createElement('select');
     select.id = 'autoTradeTimeframe';
     select.style.background = '#1A1F33';
@@ -3482,7 +3481,6 @@ function addAutoTradeControls() {
         showNotification(`Auto trading timeframe changed to ${selectedTimeframe}`, 'info');
     };
     
-    // Auto trade button
     const btn = document.createElement('button');
     btn.id = 'autoTradeBtn';
     btn.className = 'trade-action-btn';
@@ -3496,14 +3494,13 @@ function addAutoTradeControls() {
     footer.appendChild(controlsDiv);
 }
 
-// Toggle function
 function toggleAutoTrade() {
     autoTradeEnabled = !autoTradeEnabled;
     const btn = document.getElementById('autoTradeBtn');
     if (autoTradeEnabled) {
         btn.innerHTML = '⏸️ Stop Auto Trading';
         startAutoTradeLoop();
-        showNotification(`🤖 Auto trading ENABLED (${selectedTimeframe} timeframe)`, 'success');
+        showNotification(`🤖 Auto trading ENABLED (${selectedTimeframe} timeframe, 85% confidence threshold)`, 'success');
     } else {
         btn.innerHTML = '🤖 Start Auto Trading';
         stopAutoTradeLoop();
@@ -3524,7 +3521,6 @@ function stopAutoTradeLoop() {
     }
 }
 
-// Fetch candlestick data from Binance for selected timeframe
 async function fetchAutoTradeCandles() {
     const symbol = currentSymbol || 'BTCUSDT';
     let binanceInterval = selectedTimeframe;
@@ -3535,7 +3531,7 @@ async function fetchAutoTradeCandles() {
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${binanceInterval}&limit=50`;
     try {
         const response = await axios.get(url);
-        const candles = response.data.map(k => ({
+        return response.data.map(k => ({
             time: k[0],
             open: parseFloat(k[1]),
             high: parseFloat(k[2]),
@@ -3543,14 +3539,12 @@ async function fetchAutoTradeCandles() {
             close: parseFloat(k[4]),
             volume: parseFloat(k[5])
         }));
-        return candles;
     } catch (error) {
         console.error('Auto trade: Failed to fetch candles', error);
         return null;
     }
 }
 
-// Calculate RSI from candles
 function calculateAutoRSI(candles, period = 14) {
     if (!candles || candles.length < period + 1) return 50;
     const closes = candles.map(c => c.close);
@@ -3567,7 +3561,6 @@ function calculateAutoRSI(candles, period = 14) {
     return 100 - (100 / (1 + rs));
 }
 
-// Calculate Support & Resistance from candles
 function calculateAutoSupportResistance(candles) {
     const highs = candles.map(c => c.high);
     const lows = candles.map(c => c.low);
@@ -3576,68 +3569,42 @@ function calculateAutoSupportResistance(candles) {
     return { support: recentLow, resistance: recentHigh };
 }
 
-// Main auto trade execution using selected timeframe data
 async function executeAutoTrade() {
     if (!autoTradeEnabled) return;
-    if (!currentUser) {
-        console.log('Auto trade: Not logged in');
-        return;
-    }
+    if (!currentUser) return;
     
     const userData = usersData[currentUser]?.tradingData;
     if (!userData) return;
+    if (userData.positions && userData.positions.length > 0) return;
     
-    // Only one open position at a time
-    if (userData.positions && userData.positions.length > 0) {
-        console.log('Auto trade: Open position exists, skipping');
-        return;
-    }
-    
-    // Fetch fresh data for selected timeframe
     const candles = await fetchAutoTradeCandles();
-    if (!candles || candles.length === 0) {
-        console.log('Auto trade: No candle data');
-        return;
-    }
+    if (!candles || candles.length === 0) return;
     
     const currentPrice = candles[candles.length-1].close;
     const rsi = calculateAutoRSI(candles, 14);
     const { support, resistance } = calculateAutoSupportResistance(candles);
     
-    // Confidence: We'll compute based on conditions similar to your AI
     let confidence = 0;
     const isSupportZone = currentPrice <= support * 1.005;
     const isResistanceZone = currentPrice >= resistance * 0.995;
     
-    if (isSupportZone && rsi < 30) {
-        confidence = Math.min(99, 95 + (30 - rsi) * 0.5);
-    } else if (isResistanceZone && rsi > 70) {
-        confidence = Math.min(99, 95 + (rsi - 70) * 0.5);
-    } else {
-        console.log(`Auto trade: Conditions not met. SupportZone=${isSupportZone}, RSI=${rsi.toFixed(2)}`);
-        return;
-    }
-    
-    if (confidence < 95) {
-        console.log(`Auto trade: Confidence ${confidence.toFixed(1)}% < 95%, skipping`);
-        return;
-    }
-    
-    // Determine action
     let action = null;
-    if (isSupportZone && rsi < 30) action = 'buy';
-    else if (isResistanceZone && rsi > 70) action = 'sell';
+    if (isSupportZone && rsi < 30) {
+        confidence = Math.min(99, 85 + (30 - rsi) * 0.5); // base 85 instead of 95
+        if (confidence >= 85) action = 'buy';
+    } else if (isResistanceZone && rsi > 70) {
+        confidence = Math.min(99, 85 + (rsi - 70) * 0.5); // base 85 instead of 95
+        if (confidence >= 85) action = 'sell';
+    }
     
-    if (!action) return;
-    
-    // Cooldown check
-    const now = Date.now();
-    if (now - lastAutoTradeTime < AUTO_TRADE_COOLDOWN_MS) {
-        console.log('Auto trade: Cooldown active');
+    if (!action) {
+        console.log(`Auto trade: No action. SupportZone=${isSupportZone}, RSI=${rsi.toFixed(2)}`);
         return;
     }
     
-    // Execute trade
+    const now = Date.now();
+    if (now - lastAutoTradeTime < AUTO_TRADE_COOLDOWN_MS) return;
+    
     const tradeAmount = 20;
     const amountInput = document.getElementById('tradeAmount');
     if (amountInput) amountInput.value = tradeAmount;
@@ -3645,14 +3612,11 @@ async function executeAutoTrade() {
     if (typeof executeTrade === 'function') {
         executeTrade(action);
         lastAutoTradeTime = now;
-        showNotification(`🤖 Auto trade (${selectedTimeframe}): ${action.toUpperCase()} @ $${currentPrice.toFixed(2)}`, 'success');
+        showNotification(`🤖 Auto trade (${selectedTimeframe}): ${action.toUpperCase()} @ $${currentPrice.toFixed(2)} (${confidence.toFixed(1)}% conf)`, 'success');
         console.log(`Auto trade executed: ${action} at ${currentPrice}, RSI=${rsi.toFixed(2)}, Confidence=${confidence.toFixed(1)}%`);
-    } else {
-        console.error('executeTrade function missing');
     }
 }
 
-// Initialize controls when DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', addAutoTradeControls);
 } else {
