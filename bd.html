@@ -6161,34 +6161,29 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-// শুধুমাত্র রেকমেন্ডেশন বক্সের ডাটা localStorage-এ লিখুন (লাইভ আপডেট)
-function updateRecommendationBoxSignal() {
-    const signalElem = document.getElementById('finalSignal');
-    const confidenceElem = document.getElementById('finalConfidence');
-    const rsiElem = document.getElementById('rsiValue');
-    const priceElem = document.getElementById('currentPriceLarge');
+// শুধু রেকমেন্ডেশন বক্সের সিগন্যাল localStorage-এ লিখুন (আলাদা key)
+function saveRecBoxSignal() {
+    const signal = document.getElementById('finalSignal')?.innerText;
+    const confidenceText = document.getElementById('finalConfidence')?.innerText;
+    const rsi = document.getElementById('rsiValue')?.innerText;
+    const price = document.getElementById('currentPriceLarge')?.innerText;
     
-    if (signalElem && confidenceElem && rsiElem) {
-        let confText = confidenceElem.innerText.trim();
-        let confidence = parseFloat(confText);
-        if (isNaN(confidence)) {
-            confidence = parseFloat(confText.replace('%', ''));
-        }
-        const recData = {
-            finalSignal: signalElem.innerText.trim(),
-            confidence: isNaN(confidence) ? 0 : confidence,
-            rsi: parseFloat(rsiElem.innerText) || 50,
-            price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0,
+    if (signal && confidenceText && rsi) {
+        let confidence = parseFloat(confidenceText);
+        if (isNaN(confidence)) confidence = parseFloat(confidenceText.replace('%', ''));
+        const data = {
+            finalSignal: signal.trim(),
+            confidence: confidence || 0,
+            rsi: parseFloat(rsi) || 50,
+            price: price ? parseFloat(price.replace('$', '').replace(',', '')) : 0,
             timestamp: Date.now()
         };
-        localStorage.setItem('recBoxSignal', JSON.stringify(recData));
-        // কনসোল লগ (ডিবাগের জন্য)
-        console.log('📢 Recommendation Box signal saved:', recData);
+        localStorage.setItem('REC_BOX_SIGNAL', JSON.stringify(data));
+        console.log('✅ Rec Box signal saved:', data);
     }
 }
-
-// প্রতি ১ সেকেন্ডে আপডেট করুন (লাইভ feel এর জন্য)
-setInterval(updateRecommendationBoxSignal, 1000);
+// প্রতি ১ সেকেন্ডে আপডেট (লাইভ থাকবে)
+setInterval(saveRecBoxSignal, 1000);
     </script>
     
 </body>
