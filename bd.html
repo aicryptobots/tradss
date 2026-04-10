@@ -6161,24 +6161,24 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-// Save only the Recommendation Box signal to localStorage (unique key)
+// Save ONLY the Recommendation Box signal to localStorage (unique key)
 setInterval(() => {
-    const recSignal = document.getElementById('finalSignal');
-    const recConfidence = document.getElementById('finalConfidence');
-    const recRsi = document.getElementById('rsiValue');
-    const recPrice = document.getElementById('currentPriceLarge');
+    const signalEl = document.getElementById('finalSignal');
+    const confidenceEl = document.getElementById('finalConfidence');
+    const rsiEl = document.getElementById('rsiValue');
+    const priceEl = document.getElementById('currentPriceLarge');
     
-    if (recSignal && recConfidence && recRsi) {
-        let confidence = parseFloat(recConfidence.innerText);
-        if (isNaN(confidence)) confidence = parseFloat(recConfidence.innerText.replace('%', ''));
+    if (signalEl && confidenceEl && rsiEl) {
+        let confidence = parseFloat(confidenceEl.innerText);
+        if (isNaN(confidence)) confidence = parseFloat(confidenceEl.innerText.replace('%', ''));
         const data = {
-            signal: recSignal.innerText.trim(),
+            signal: signalEl.innerText.trim(),
             confidence: confidence || 0,
-            rsi: parseFloat(recRsi.innerText) || 50,
-            price: recPrice ? parseFloat(recPrice.innerText.replace('$', '').replace(',', '')) : 0,
+            rsi: parseFloat(rsiEl.innerText) || 50,
+            price: priceEl ? parseFloat(priceEl.innerText.replace('$', '').replace(',', '')) : 0,
             time: Date.now()
         };
-        localStorage.setItem('REC_BOX_SIGNAL', JSON.stringify(data));
+        localStorage.setItem('REC_BOX_ONLY', JSON.stringify(data));
         console.log('✅ Recommendation Box data saved:', data);
     }
 }, 1000);
