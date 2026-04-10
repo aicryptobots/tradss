@@ -6655,72 +6655,71 @@ window.autoClosePositions = function() {
         if (typeof loadUserTradingData === 'function') loadUserTradingData();
     }
 };
-
-// ==================== 4. AUTO TRADING BOT (PER‑ACCOUNT TIMEFRAME) ====================
+// ==================== AUTO TRADING BOT (ENGLISH) ====================
 (function() {
+    // Configuration
     let enabled = false;
     let interval = null;
     let lastTradeTime = 0;
-    const COOLDOWN = 60000;
+    const COOLDOWN = 60000; // 1 minute
     let selectedTF = '5m';
-    let currentUserCache = null;
 
+    // Per-user settings (localStorage)
     function getStorageKey(base) {
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
         return base + '_' + (user || 'guest');
     }
-
     function loadUserSettings() {
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
         if (user) {
-            let enabledKey = 'autoTradeEnabled_' + user;
-            let tfKey = 'autoTradeTF_' + user;
-            enabled = localStorage.getItem(enabledKey) === 'true';
-            let savedTF = localStorage.getItem(tfKey);
+            enabled = localStorage.getItem('autoTradeEnabled_' + user) === 'true';
+            let savedTF = localStorage.getItem('autoTradeTF_' + user);
             if (savedTF) selectedTF = savedTF;
-            else selectedTF = '5m';
         } else {
             enabled = localStorage.getItem('autoTradeEnabled_guest') === 'true';
             let savedTF = localStorage.getItem('autoTradeTF_guest');
             if (savedTF) selectedTF = savedTF;
-            else selectedTF = '5m';
-        }
-        let dropdown = document.getElementById('autoTimeframe');
-        if (dropdown) {
-            for (let i = 0; i < dropdown.options.length; i++) {
-                if (dropdown.options[i].value === selectedTF) {
-                    dropdown.selectedIndex = i;
-                    break;
-                }
-            }
         }
     }
-
     function saveUserSettings() {
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
         let suffix = user || 'guest';
         localStorage.setItem('autoTradeEnabled_' + suffix, enabled);
         localStorage.setItem('autoTradeTF_' + suffix, selectedTF);
     }
-
     loadUserSettings();
 
-    function getFinalSignal() {
-        let signalElem = document.getElementById('finalSignal');
-        if (signalElem) {
-            let text = signalElem.innerText.trim().toUpperCase();
-            if (text === 'BUY') return 'buy';
-            if (text === 'SELL') return 'sell';
+    // TP/SL percentages based on timeframe
+    function getTPSLByTimeframe(tf) {
+        switch(tf) {
+            case '1m': return { tpPercent: 0.0025, slPercent: 0.0012 };
+            case '5m': return { tpPercent: 0.006,   slPercent: 0.003 };
+            case '15m':return { tpPercent: 0.009,   slPercent: 0.0045 };
+            case '1h': return { tpPercent: 0.0135,  slPercent: 0.00675 };
+            case '4h': return { tpPercent: 0.02,    slPercent: 0.01 };
+            case '1D': return { tpPercent: 0.035,   slPercent: 0.0175 };
+            default:   return { tpPercent: 0.006,   slPercent: 0.003 };
         }
-        let signalDiv = document.querySelector('.final-signal .signal-text');
-        if (signalDiv) {
-            let text = signalDiv.innerText.trim().toUpperCase();
-            if (text === 'BUY') return 'buy';
-            if (text === 'SELL') return 'sell';
+    }
+
+    // Get final signal from Recommendation Box
+    function getFinalSignal() {
+        let elem = document.getElementById('finalSignal');
+        if (elem) {
+            let txt = elem.innerText.trim().toUpperCase();
+            if (txt === 'BUY') return 'buy';
+            if (txt === 'SELL') return 'sell';
+        }
+        let div = document.querySelector('.final-signal .signal-text');
+        if (div) {
+            let txt = div.innerText.trim().toUpperCase();
+            if (txt === 'BUY') return 'buy';
+            if (txt === 'SELL') return 'sell';
         }
         return null;
     }
 
+    // Get RSI from analytics box
     function getRSI() {
         let val = document.getElementById('rsiValue')?.innerText;
         if (val && !isNaN(parseFloat(val))) return parseFloat(val);
@@ -6729,71 +6728,140 @@ window.autoClosePositions = function() {
         return 50;
     }
 
-    let statusDiv = null;
-    function updateStatusDisplay(msg) {
-        if (statusDiv) {
-            statusDiv.innerHTML = msg;
-            statusDiv.style.color = msg.includes('✅') ? '#22C55E' : (msg.includes('🔴') ? '#EF4444' : '#F59E0B');
+    // Auto close positions based on TP/SL
+    window.autoClosePositions = function() {
+        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+        if (!user) return;
+        let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+        if (!data || !data[user]) return;
+        let userData = data[user].tradingData;
+        if (!userData || !userData.positions || userData.positions.length === 0) return;
+
+        let priceElem = document.getElementById('currentPriceLarge');
+        let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
+        if (!currentPrice) return;
+
+        let tfKey = 'autoTradeTF_' + user;
+        let currentTF = localStorage.getItem(tfKey) || '5m';
+        let { tpPercent, slPercent } = getTPSLByTimeframe(currentTF);
+
+        let updated = false;
+        for (let i = 0; i < userData.positions.length; i++) {
+            let pos = userData.positions[i];
+            let leverage = pos.leverage || 1;
+            let positionSize = pos.positionSize || (pos.margin * leverage);
+            let pnlPercent = (pos.type === 'buy') 
+                ? (currentPrice - pos.entryPrice) / pos.entryPrice 
+                : (pos.entryPrice - currentPrice) / pos.entryPrice;
+            let pnl = pnlPercent * positionSize;
+            if (pnlPercent >= tpPercent || pnlPercent <= -slPercent) {
+                let historyEntry = {
+                    date: new Date().toLocaleString(),
+                    timestamp: new Date().toISOString(),
+                    type: pos.type,
+                    entryPrice: pos.entryPrice,
+                    exitPrice: currentPrice,
+                    pnl: pnl,
+                    pnlPercent: pnlPercent * 100,
+                    positionSize: positionSize,
+                    margin: pos.margin || pos.amount,
+                    leverage: leverage,
+                    timeframe: currentTF
+                };
+                userData.balance += (pos.margin || pos.amount) + pnl;
+                userData.totalTrades = (userData.totalTrades || 0) + 1;
+                if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
+                userData.totalProfit = (userData.totalProfit || 0) + pnl;
+                userData.positions.splice(i, 1);
+                updated = true;
+                i--;
+                if (!userData.tradeHistory) userData.tradeHistory = [];
+                userData.tradeHistory.unshift(historyEntry);
+                if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
+                let msg = `🔒 Auto closed ${pos.type.toUpperCase()} (${currentTF}) | ${(pnlPercent*100).toFixed(2)}% | PnL: $${pnl.toFixed(2)}`;
+                if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
+                else console.log(msg);
+            }
         }
+        if (updated) {
+            localStorage.setItem('usersData', JSON.stringify(data));
+            if (typeof loadUserTradingData === 'function') loadUserTradingData();
+        }
+    };
+
+    // Execute trade function (if not already defined)
+    if (typeof window.executeTrade !== 'function') {
+        window.executeTrade = function(type) {
+            console.log('executeTrade called with type:', type);
+            let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+            if (!user) { console.log('Not logged in'); return; }
+            let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+            if (!data || !data[user]) { console.log('No trading data'); return; }
+            let userData = data[user].tradingData;
+            if (!userData) { console.log('Trading data missing'); return; }
+            if (userData.positions && userData.positions.length > 0) { console.log('Open position exists'); return; }
+            let margin = 500, leverage = 5, positionSize = margin * leverage;
+            let priceElem = document.getElementById('currentPriceLarge');
+            let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
+            let position = {
+                id: Date.now(),
+                symbol: 'BTCUSDT',
+                type: type,
+                margin: margin,
+                leverage: leverage,
+                positionSize: positionSize,
+                entryPrice: price,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            userData.positions.push(position);
+            userData.balance -= margin;
+            userData.totalTrades = (userData.totalTrades || 0) + 1;
+            localStorage.setItem('usersData', JSON.stringify(data));
+            if (typeof loadUserTradingData === 'function') loadUserTradingData();
+            console.log(`✅ ${type.toUpperCase()} order placed! Margin: $${margin} @ ${leverage}X`);
+            if (typeof showNotification === 'function') showNotification(`${type.toUpperCase()} order placed: $${margin} (${leverage}X) @ $${price}`, 'success');
+        };
     }
 
+    // Main auto trade check
     function checkAndTrade() {
         autoClosePositions();
-        if (!enabled) {
-            updateStatusDisplay('⏸️ Auto trade OFF');
-            return;
-        }
+        if (!enabled) return;
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-        if (!user) {
-            updateStatusDisplay('🔴 Not logged in');
-            return;
-        }
+        if (!user) return;
         let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-        if (!data || !data[user]) {
-            updateStatusDisplay('⚠️ No user data');
-            return;
-        }
+        if (!data || !data[user]) return;
         let userData = data[user].tradingData;
-        if (!userData) {
-            updateStatusDisplay('⚠️ No trading data');
-            return;
-        }
-        if (userData.positions && userData.positions.length > 0) {
-            updateStatusDisplay('📌 Open position exists - waiting');
-            return;
-        }
+        if (!userData) return;
+        if (userData.positions && userData.positions.length > 0) return;
 
         let signal = getFinalSignal();
         let rsi = getRSI();
         let now = Date.now();
         let cooldownLeft = Math.max(0, COOLDOWN - (now - lastTradeTime));
-
         let action = null;
         if (signal === 'buy' && rsi < 30) action = 'buy';
         else if (signal === 'sell' && rsi > 70) action = 'sell';
-
-        let statusMsg = `🔄 Timeframe: ${selectedTF} | Signal: ${signal ? signal.toUpperCase() : 'NONE'} | RSI=${rsi.toFixed(1)} | ${action ? 'Action: '+action.toUpperCase() : 'No action'}`;
-        if (cooldownLeft > 0) statusMsg += ` | Cooldown: ${Math.ceil(cooldownLeft/1000)}s`;
-        updateStatusDisplay(statusMsg);
-
         if (!action) return;
         if (cooldownLeft > 0) return;
 
         if (typeof window.executeTrade === 'function') {
             window.executeTrade(action);
             lastTradeTime = now;
-            updateStatusDisplay(`✅ ${action.toUpperCase()} trade executed!`);
-            if (typeof showNotification === 'function') {
-                showNotification(`🤖 AUTO ${action.toUpperCase()} | ${selectedTF} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
-            }
-        } else {
-            updateStatusDisplay('❌ executeTrade function missing');
+            if (typeof showNotification === 'function') showNotification(`🤖 AUTO ${action.toUpperCase()} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
         }
     }
 
+    // Create UI panel below AI Recommendation box
     function addPanel() {
-        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-        if (!footer) { setTimeout(addPanel, 500); return; }
+        let target = document.querySelector('.ai-rec-box') || document.querySelector('.recommendation-box');
+        if (!target) {
+            target = document.querySelector('.chart-section');
+            if (!target) {
+                setTimeout(addPanel, 500);
+                return;
+            }
+        }
         if (document.getElementById('autoPanel')) return;
 
         let panel = document.createElement('div');
@@ -6801,21 +6869,20 @@ window.autoClosePositions = function() {
         panel.style.display = 'flex';
         panel.style.flexWrap = 'wrap';
         panel.style.gap = '10px';
-        panel.style.marginTop = '10px';
+        panel.style.margin = '15px 0';
+        panel.style.padding = '12px';
+        panel.style.background = '#0B0F1C';
+        panel.style.border = '1px solid #3B82F6';
+        panel.style.borderRadius = '16px';
         panel.style.alignItems = 'center';
         panel.style.justifyContent = 'space-between';
-        panel.style.width = '100%';
-
-        let leftDiv = document.createElement('div');
-        leftDiv.style.display = 'flex';
-        leftDiv.style.gap = '10px';
 
         let select = document.createElement('select');
         select.id = 'autoTimeframe';
         select.style.background = '#1A1F33';
         select.style.border = '1px solid #3B82F6';
         select.style.borderRadius = '8px';
-        select.style.padding = '8px 12px';
+        select.style.padding = '6px 12px';
         select.style.color = 'white';
         ['1m','5m','15m','1h','4h','1D'].forEach(tf => {
             let opt = document.createElement('option');
@@ -6828,42 +6895,33 @@ window.autoClosePositions = function() {
             selectedTF = e.target.value;
             saveUserSettings();
             let { tpPercent, slPercent } = getTPSLByTimeframe(selectedTF);
-            if (typeof showNotification === 'function') {
-                showNotification(`Timeframe: ${selectedTF} | TP: ${(tpPercent*100).toFixed(2)}% | SL: ${(slPercent*100).toFixed(2)}%`, 'info');
-            }
+            if (typeof showNotification === 'function') showNotification(`Timeframe: ${selectedTF} | TP: ${(tpPercent*100).toFixed(2)}% | SL: ${(slPercent*100).toFixed(2)}%`, 'info');
         };
 
-        let btn = document.createElement('button');
-        btn.id = 'autoStartStop';
-        btn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
-        btn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
-        btn.style.color = 'white';
-        btn.style.border = 'none';
-        btn.style.borderRadius = '8px';
-        btn.style.padding = '8px 16px';
-        btn.style.cursor = 'pointer';
-        btn.onclick = () => {
+        let startStopBtn = document.createElement('button');
+        startStopBtn.id = 'autoStartStop';
+        startStopBtn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
+        startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
+        startStopBtn.style.color = 'white';
+        startStopBtn.style.border = 'none';
+        startStopBtn.style.borderRadius = '8px';
+        startStopBtn.style.padding = '8px 16px';
+        startStopBtn.style.cursor = 'pointer';
+        startStopBtn.onclick = () => {
             enabled = !enabled;
             saveUserSettings();
-            btn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
+            startStopBtn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
             if (enabled) {
                 if (interval) clearInterval(interval);
                 interval = setInterval(checkAndTrade, 10000);
                 checkAndTrade();
-                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED (Signal + RSI)', 'success');
+                if (typeof showNotification === 'function') showNotification('✅ Auto trading ENABLED', 'success');
             } else {
                 if (interval) clearInterval(interval);
                 interval = null;
-                updateStatusDisplay('⏹️ Auto trading disabled');
                 if (typeof showNotification === 'function') showNotification('⏹️ Auto trading DISABLED', 'info');
             }
         };
-        leftDiv.appendChild(select);
-        leftDiv.appendChild(btn);
-
-        let rightDiv = document.createElement('div');
-        rightDiv.style.display = 'flex';
-        rightDiv.style.gap = '10px';
 
         let testBuy = document.createElement('button');
         testBuy.textContent = '🔵 Test BUY';
@@ -6885,58 +6943,142 @@ window.autoClosePositions = function() {
         testSell.style.cursor = 'pointer';
         testSell.onclick = () => { if (typeof window.executeTrade === 'function') window.executeTrade('sell'); else alert('executeTrade missing'); };
 
+        let audioEnabledState = localStorage.getItem('audioAlertsEnabled') === 'true';
+        let audioBtn = document.createElement('button');
+        audioBtn.textContent = audioEnabledState ? '🔊 Audio ON' : '🔇 Audio OFF';
+        audioBtn.style.background = audioEnabledState ? '#22C55E' : '#6B7280';
+        audioBtn.style.color = 'white';
+        audioBtn.style.border = 'none';
+        audioBtn.style.borderRadius = '8px';
+        audioBtn.style.padding = '8px 16px';
+        audioBtn.style.cursor = 'pointer';
+        audioBtn.onclick = () => {
+            let newState = !audioEnabledState;
+            localStorage.setItem('audioAlertsEnabled', newState);
+            audioEnabledState = newState;
+            audioBtn.textContent = audioEnabledState ? '🔊 Audio ON' : '🔇 Audio OFF';
+            audioBtn.style.background = audioEnabledState ? '#22C55E' : '#6B7280';
+            if (typeof showNotification === 'function') showNotification(audioEnabledState ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info');
+        };
+
+        let historyBtn = document.createElement('button');
+        historyBtn.textContent = '📜 Trade History';
+        historyBtn.style.background = '#3B82F6';
+        historyBtn.style.color = 'white';
+        historyBtn.style.border = 'none';
+        historyBtn.style.borderRadius = '8px';
+        historyBtn.style.padding = '8px 16px';
+        historyBtn.style.cursor = 'pointer';
+        historyBtn.onclick = showTradeHistory;
+
+        let leftDiv = document.createElement('div');
+        leftDiv.style.display = 'flex';
+        leftDiv.style.gap = '10px';
+        leftDiv.style.flexWrap = 'wrap';
+        leftDiv.appendChild(select);
+        leftDiv.appendChild(startStopBtn);
+
+        let rightDiv = document.createElement('div');
+        rightDiv.style.display = 'flex';
+        rightDiv.style.gap = '10px';
+        rightDiv.style.flexWrap = 'wrap';
         rightDiv.appendChild(testBuy);
         rightDiv.appendChild(testSell);
+        rightDiv.appendChild(audioBtn);
+        rightDiv.appendChild(historyBtn);
 
         panel.appendChild(leftDiv);
         panel.appendChild(rightDiv);
-        footer.appendChild(panel);
-
-        statusDiv = document.createElement('div');
-        statusDiv.id = 'autoStatus';
-        statusDiv.style.marginTop = '10px';
-        statusDiv.style.padding = '8px';
-        statusDiv.style.background = '#1A1F33';
-        statusDiv.style.borderRadius = '8px';
-        statusDiv.style.fontSize = '0.85rem';
-        statusDiv.style.textAlign = 'center';
-        statusDiv.style.fontFamily = 'monospace';
-        statusDiv.innerHTML = '⏸️ Auto trade OFF';
-        footer.parentNode.insertBefore(statusDiv, footer.nextSibling);
+        target.parentNode.insertBefore(panel, target.nextSibling);
     }
 
-    function onLogin() {
-        loadUserSettings();
-        let btn = document.getElementById('autoStartStop');
-        if (btn) btn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
-        if (enabled) {
-            if (interval) clearInterval(interval);
-            interval = setInterval(checkAndTrade, 10000);
-            checkAndTrade();
-        } else {
-            if (interval) clearInterval(interval);
-            interval = null;
-            updateStatusDisplay('⏹️ Auto trading disabled');
-        }
+    // Trade history modal
+    function showTradeHistory() {
+        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+        if (!user) { alert('Login first'); return; }
+        let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
+        if (!data || !data[user]) { alert('No data'); return; }
+        let history = data[user].tradingData?.tradeHistory || [];
+        if (history.length === 0) { alert('No trade history'); return; }
+        let modalHtml = `<div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto;">
+            <div style="display:flex; justify-content:space-between;"><h3 style="color:#3B82F6;">Trade History</h3><button id="closeHist" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px;">Close</button></div>
+            <table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#1A1F33;"><th>Date</th><th>TF</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>`;
+        history.forEach(t => {
+            let pnlColor = t.pnl >= 0 ? '#22C55E' : '#EF4444';
+            modalHtml += `<tr><td>${t.date || t.timestamp}</td><td>${t.timeframe || '-'}</td><td style="color:${t.type==='buy'?'#22C55E':'#EF4444'}">${t.type}</td><td>$${t.entryPrice?.toFixed(2)}</td><td>$${t.exitPrice?.toFixed(2)}</td><td style="color:${pnlColor}">$${t.pnl?.toFixed(2)} (${(t.pnlPercent||0).toFixed(1)}%)</td></tr>`;
+        });
+        modalHtml += `</tbody></table></div>`;
+        if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('closeHist').onclick = () => document.getElementById('historyModal').remove();
     }
 
-    if (typeof loginWithCode === 'function') {
-        const origLogin = loginWithCode;
-        window.loginWithCode = async function() {
-            await origLogin();
-            onLogin();
+    // Audio alerts hook
+    let originalExecute = window.executeTrade;
+    if (originalExecute) {
+        window.executeTrade = function(type) {
+            originalExecute(type);
+            let audioOn = localStorage.getItem('audioAlertsEnabled') === 'true';
+            if (audioOn) {
+                let msg = type === 'buy' ? 'Right time open buy trade' : 'Right time open sell trade';
+                let count = 0;
+                function speak() {
+                    if (localStorage.getItem('audioAlertsEnabled') !== 'true') return;
+                    let utterance = new SpeechSynthesisUtterance(msg);
+                    utterance.rate = 0.7;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(utterance);
+                    count++;
+                    if (count < 5) setTimeout(speak, 1800);
+                }
+                speak();
+            }
         };
     }
-    if (typeof logout === 'function') {
-        const origLogout = logout;
+    let originalClosePos = window.closePosition;
+    if (originalClosePos) {
+        window.closePosition = function(id) {
+            originalClosePos(id);
+            let audioOn = localStorage.getItem('audioAlertsEnabled') === 'true';
+            if (audioOn) {
+                let count = 0;
+                function speak() {
+                    if (localStorage.getItem('audioAlertsEnabled') !== 'true') return;
+                    let utterance = new SpeechSynthesisUtterance('Right time close trade');
+                    utterance.rate = 0.7;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(utterance);
+                    count++;
+                    if (count < 5) setTimeout(speak, 1800);
+                }
+                speak();
+            }
+        };
+    }
+
+    // Hook into login/logout
+    let origLogin = window.loginWithCode;
+    if (origLogin) {
+        window.loginWithCode = async function() {
+            await origLogin();
+            loadUserSettings();
+            if (enabled) {
+                if (interval) clearInterval(interval);
+                interval = setInterval(checkAndTrade, 10000);
+                checkAndTrade();
+            }
+        };
+    }
+    let origLogout = window.logout;
+    if (origLogout) {
         window.logout = function() {
             if (interval) clearInterval(interval);
             interval = null;
-            updateStatusDisplay('⏹️ Auto trading disabled (logged out)');
             origLogout();
         };
     }
 
+    // Initialize on page load
     window.addEventListener('load', () => {
         addPanel();
         if (enabled) {
@@ -6947,211 +7089,6 @@ window.autoClosePositions = function() {
             }
         }
     });
-})();
-
-// ==================== 5. TRADE HISTORY FEATURE (PERSISTENT) ====================
-(function() {
-    function addHistoryButton() {
-        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-        if (!footer) { setTimeout(addHistoryButton, 500); return; }
-        if (document.getElementById('historyBtn')) return;
-
-        let btn = document.createElement('button');
-        btn.id = 'historyBtn';
-        btn.textContent = '📜 View Trade History';
-        btn.style.background = '#3B82F6';
-        btn.style.color = 'white';
-        btn.style.border = 'none';
-        btn.style.borderRadius = '8px';
-        btn.style.padding = '8px 16px';
-        btn.style.cursor = 'pointer';
-        btn.style.marginLeft = '10px';
-        btn.onclick = showTradeHistory;
-        
-        let existingPanel = document.getElementById('autoPanel');
-        if (existingPanel) existingPanel.appendChild(btn);
-        else footer.appendChild(btn);
-    }
-
-    function showTradeHistory() {
-        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-        if (!user) { alert('Please login first'); return; }
-        let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-        if (!data || !data[user]) { alert('No trading data'); return; }
-        let history = data[user].tradingData?.tradeHistory || [];
-        if (history.length === 0) { alert('No trade history yet'); return; }
-
-        let modalHtml = `
-        <div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:900px; max-height:80%; overflow:auto; box-shadow:0 0 50px rgba(0,0,0,0.8);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="color:#3B82F6;">📜 Trade History</h3>
-                <button id="closeModalBtn" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px; cursor:pointer;">Close</button>
-            </div>
-            <table style="width:100%; border-collapse:collapse; color:#E5E7EB;">
-                <thead><tr style="background:#1A1F33;">
-                    <th style="padding:8px; text-align:left;">Date & Time</th>
-                    <th style="padding:8px; text-align:left;">TF</th>
-                    <th style="padding:8px; text-align:left;">Type</th>
-                    <th style="padding:8px; text-align:left;">Entry</th>
-                    <th style="padding:8px; text-align:left;">Exit</th>
-                    <th style="padding:8px; text-align:left;">P&L</th>
-                 </td></thead><tbody>`;
-        history.forEach(trade => {
-            let pnlColor = trade.pnl >= 0 ? '#22C55E' : '#EF4444';
-            modalHtml += `<tr style="border-bottom:1px solid #2A3045;">
-                <td style="padding:8px;">${trade.date || trade.timestamp || ''}</td>
-                <td style="padding:8px;">${trade.timeframe || '-'}</td>
-                <td style="padding:8px; text-transform:uppercase; color:${trade.type === 'buy' ? '#22C55E' : '#EF4444'}">${trade.type}</td>
-                <td style="padding:8px;">$${trade.entryPrice?.toFixed(2)}</td>
-                <td style="padding:8px;">$${trade.exitPrice?.toFixed(2)}</td>
-                <td style="padding:8px; color:${pnlColor};">$${trade.pnl?.toFixed(2)} (${(trade.pnlPercent || 0).toFixed(1)}%)</td>
-            </tr>`;
-        });
-        modalHtml += `</tbody></table></div>`;
-        if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        document.getElementById('closeModalBtn').onclick = () => document.getElementById('historyModal').remove();
-    }
-
-    // Override manual close function if exists
-    if (typeof window.closePosition === 'function') {
-        const originalClose = window.closePosition;
-        window.closePosition = function(id) {
-            let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-            if (!user) return;
-            let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-            if (!data || !data[user]) return;
-            let userData = data[user].tradingData;
-            if (!userData) return;
-            let posIndex = userData.positions.findIndex(p => p.id == id);
-            if (posIndex === -1) return;
-            let pos = userData.positions[posIndex];
-            let priceElem = document.getElementById('currentPriceLarge');
-            let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : pos.entryPrice;
-            let leverage = pos.leverage || 1;
-            let positionSize = pos.positionSize || (pos.margin * leverage);
-            let pnlPercent = (pos.type === 'buy') 
-                ? (currentPrice - pos.entryPrice) / pos.entryPrice 
-                : (pos.entryPrice - currentPrice) / pos.entryPrice;
-            let pnl = pnlPercent * positionSize;
-            let tfKey = 'autoTradeTF_' + user;
-            let currentTF = localStorage.getItem(tfKey) || '5m';
-            let historyEntry = {
-                date: new Date().toLocaleString(),
-                timestamp: new Date().toISOString(),
-                type: pos.type,
-                entryPrice: pos.entryPrice,
-                exitPrice: currentPrice,
-                pnl: pnl,
-                pnlPercent: pnlPercent * 100,
-                positionSize: positionSize,
-                margin: pos.margin || pos.amount,
-                leverage: leverage,
-                timeframe: currentTF
-            };
-            originalClose(id);
-            setTimeout(() => {
-                let newData = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-                let newUserData = newData[user].tradingData;
-                if (!newUserData.tradeHistory) newUserData.tradeHistory = [];
-                newUserData.tradeHistory.unshift(historyEntry);
-                if (newUserData.tradeHistory.length > 50) newUserData.tradeHistory.pop();
-                localStorage.setItem('usersData', JSON.stringify(newData));
-                if (typeof loadUserTradingData === 'function') loadUserTradingData();
-            }, 100);
-        };
-    }
-
-    window.addEventListener('load', addHistoryButton);
-})();
-
-// ==================== 6. AUDIO ALERT FEATURE (PERSISTENT) ====================
-(function() {
-    let audioEnabled = localStorage.getItem('audioAlertsEnabled') === 'true';
-    
-    function speakMessage(message) {
-        if (!audioEnabled) return;
-        let count = 0;
-        function speak() {
-            if (!audioEnabled) return;
-            let utterance = new SpeechSynthesisUtterance(message);
-            utterance.lang = 'en-US';
-            utterance.rate = 0.7;
-            utterance.pitch = 1;
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utterance);
-            count++;
-            if (count < 5) setTimeout(speak, 1800);
-        }
-        speak();
-    }
-    
-    if (typeof window.executeTrade === 'function') {
-        const originalExecuteTrade = window.executeTrade;
-        window.executeTrade = function(type) {
-            originalExecuteTrade(type);
-            if (type === 'buy') speakMessage('Right time open buy trade');
-            else if (type === 'sell') speakMessage('Right time open sell trade');
-        };
-    }
-    
-    if (typeof window.closePosition === 'function') {
-        const originalClosePosition = window.closePosition;
-        window.closePosition = function(id) {
-            originalClosePosition(id);
-            speakMessage('Right time close trade');
-        };
-    }
-    
-    if (typeof window.autoClosePositions === 'function') {
-        const originalAutoClose = window.autoClosePositions;
-        window.autoClosePositions = function() {
-            let beforeCloseCount = 0;
-            if (window.usersData && window.currentUser) {
-                let userData = window.usersData[window.currentUser]?.tradingData;
-                if (userData && userData.positions) beforeCloseCount = userData.positions.length;
-            }
-            originalAutoClose();
-            let afterCloseCount = 0;
-            if (window.usersData && window.currentUser) {
-                let userData = window.usersData[window.currentUser]?.tradingData;
-                if (userData && userData.positions) afterCloseCount = userData.positions.length;
-            }
-            if (beforeCloseCount > afterCloseCount) speakMessage('Right time close trade');
-        };
-    }
-    
-    function addAudioToggleButton() {
-        let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-        if (!footer) { setTimeout(addAudioToggleButton, 500); return; }
-        if (document.getElementById('audioToggleBtn')) return;
-        
-        let btn = document.createElement('button');
-        btn.id = 'audioToggleBtn';
-        btn.textContent = audioEnabled ? '🔊 Audio Alerts ON' : '🔇 Audio Alerts OFF';
-        btn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
-        btn.style.color = 'white';
-        btn.style.border = 'none';
-        btn.style.borderRadius = '8px';
-        btn.style.padding = '8px 16px';
-        btn.style.cursor = 'pointer';
-        btn.style.marginLeft = '10px';
-        btn.onclick = () => {
-            audioEnabled = !audioEnabled;
-            localStorage.setItem('audioAlertsEnabled', audioEnabled);
-            btn.textContent = audioEnabled ? '🔊 Audio Alerts ON' : '🔇 Audio Alerts OFF';
-            btn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
-            let msg = audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled';
-            if (typeof showNotification === 'function') showNotification(msg, 'info');
-            else alert(msg);
-        };
-        
-        let existingPanel = document.getElementById('autoPanel');
-        if (existingPanel) existingPanel.appendChild(btn);
-        else footer.appendChild(btn);
-    }
-    
-    window.addEventListener('load', addAudioToggleButton);
 })();
     </script>
 </body>
