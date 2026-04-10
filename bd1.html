@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Fixed $500 | Auto TP/SL</title>
+    <title>Auto Trading Bot - With Confidence Check</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -29,8 +29,11 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Fixed $500 per trade)</h3>
-        <p style="color:#94A3B8; margin-bottom:15px;">Reads <strong>finalSignal</strong> (BUY/SELL) and <strong>RSI</strong> from main website via <code>localStorage</code> (key: <code>sharedSignal</code>). Auto‑trades when conditions are met.</p>
+        <h3>🤖 Auto Trading Bot (with Confidence & RSI)</h3>
+        <p style="color:#94A3B8; margin-bottom:15px;">Conditions:<br>
+        🟢 <strong>BUY</strong> when: <code>finalSignal = "BUY"</code> AND <code>RSI < 30</code> AND <code>Confidence ≥ 85%</code><br>
+        🔴 <strong>SELL</strong> when: <code>finalSignal = "SELL"</code> AND <code>RSI > 70</code> AND <code>Confidence ≥ 85%</code>
+        </p>
         <div class="flex-row">
             <select id="timeframeSelect">
                 <option value="1m">1m</option>
@@ -270,6 +273,7 @@
     // ==================== SIGNAL READING FROM localStorage ====================
     let currentSignal = null;
     let currentRSI = 50;
+    let currentConfidence = 0;
     let lastSignalTimestamp = 0;
 
     function readSignalFromLocalStorage() {
@@ -281,14 +285,14 @@
                 if (Date.now() - data.timestamp < 10000) {
                     currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
                     currentRSI = parseFloat(data.rsi) || 50;
+                    currentConfidence = parseFloat(data.confidence) || 0;
                     if (data.price) currentPrice = data.price;
                     lastSignalTimestamp = data.timestamp;
                     
-                    // Update status display
                     let statusMsg = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
-                    statusMsg += ` | Signal: ${currentSignal || 'N/A'} | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
+                    statusMsg += ` | Signal: ${currentSignal || 'N/A'} | RSI: ${currentRSI.toFixed(1)} | Conf: ${currentConfidence.toFixed(0)}% | Price: $${currentPrice.toFixed(2)}`;
                     document.getElementById('statusDisplay').innerHTML = statusMsg;
-                    document.getElementById('debugInfo').innerHTML = `Last signal received: ${new Date(lastSignalTimestamp).toLocaleTimeString()} | Condition for SELL: ${currentSignal === 'SELL'} && RSI>70 = ${currentRSI > 70}`;
+                    document.getElementById('debugInfo').innerHTML = `Last signal: ${new Date(lastSignalTimestamp).toLocaleTimeString()} | Conditions: BUY=${currentSignal==='BUY' && currentRSI<30 && currentConfidence>=85} | SELL=${currentSignal==='SELL' && currentRSI>70 && currentConfidence>=85}`;
                     return;
                 } else {
                     document.getElementById('debugInfo').innerHTML = 'Signal stale (>10s old)';
@@ -313,45 +317,34 @@
     function checkAndTrade() {
         autoClosePositions(); // close any positions that hit TP/SL
         if (!autoEnabled) return;
-        if (!currentSignal) {
-            console.log('Auto trade: no signal yet');
-            return;
-        }
+        if (!currentSignal) return;
         const userData = usersData[currentUser];
-        if (userData.positions.length > 0) {
-            console.log('Auto trade: position exists, waiting');
-            return;
-        }
-        if (Date.now() - lastTradeTime < COOLDOWN) {
-            console.log('Auto trade: cooldown active');
-            return;
-        }
+        if (userData.positions.length > 0) return;
+        if (Date.now() - lastTradeTime < COOLDOWN) return;
 
         let action = null;
-        if (currentSignal === 'BUY' && currentRSI < 30) {
+        // BUY condition: finalSignal = BUY, RSI < 30, Confidence >= 85%
+        if (currentSignal === 'BUY' && currentRSI < 30 && currentConfidence >= 85) {
             action = 'buy';
-        } else if (currentSignal === 'SELL' && currentRSI > 70) {
+        }
+        // SELL condition: finalSignal = SELL, RSI > 70, Confidence >= 85%
+        else if (currentSignal === 'SELL' && currentRSI > 70 && currentConfidence >= 85) {
             action = 'sell';
         }
         if (action) {
-            console.log(`Auto trade condition met: ${action} (signal=${currentSignal}, rsi=${currentRSI})`);
             if (executeTrade(action, true)) {
                 lastTradeTime = Date.now();
             }
-        } else {
-            console.log(`Auto trade condition not met: signal=${currentSignal}, rsi=${currentRSI}`);
         }
     }
 
     function startAutoLoop() {
         if (autoInterval) clearInterval(autoInterval);
-        autoInterval = setInterval(checkAndTrade, 10000); // check every 10 seconds
-        console.log('Auto trading loop started');
+        autoInterval = setInterval(checkAndTrade, 10000);
     }
     function stopAutoLoop() {
         if (autoInterval) clearInterval(autoInterval);
         autoInterval = null;
-        console.log('Auto trading loop stopped');
     }
 
     // ==================== UI CONTROLS ====================
