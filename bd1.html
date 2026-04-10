@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - With Confidence Check</title>
+    <title>Auto Trading Bot - Fixed Confidence Reading</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -17,6 +17,7 @@
         .btn-sell { background: #EF4444; border-color: #EF4444; }
         .status { background: #1A1F33; border-radius: 12px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #F59E0B; margin-bottom: 10px; }
         .debug { font-size: 0.75rem; color: #94A3B8; margin-top: 5px; }
+        .slider { width: 200px; margin: 0 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2A3045; }
         th { background: #1A1F33; color: #94A3B8; }
@@ -29,10 +30,11 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (with Confidence & RSI)</h3>
-        <p style="color:#94A3B8; margin-bottom:15px;">Conditions:<br>
-        🟢 <strong>BUY</strong> when: <code>finalSignal = "BUY"</code> AND <code>RSI < 30</code> AND <code>Confidence ≥ 85%</code><br>
-        🔴 <strong>SELL</strong> when: <code>finalSignal = "SELL"</code> AND <code>RSI > 70</code> AND <code>Confidence ≥ 85%</code>
+        <h3>🤖 Auto Trading Bot (with Confidence Fix)</h3>
+        <p style="color:#94A3B8; margin-bottom:15px;">
+        Conditions:<br>
+        🟢 <strong>BUY</strong> when: <code>finalSignal = "BUY"</code> AND <code>RSI < 30</code> AND <code>Confidence ≥ Threshold</code><br>
+        🔴 <strong>SELL</strong> when: <code>finalSignal = "SELL"</code> AND <code>RSI > 70</code> AND <code>Confidence ≥ Threshold</code>
         </p>
         <div class="flex-row">
             <select id="timeframeSelect">
@@ -49,6 +51,11 @@
             <button id="audioToggleBtn">🔊 Audio ON</button>
             <button id="historyBtn">📜 Trade History</button>
             <button id="resetDataBtn" style="background:#6B7280;">🔄 Reset Demo Data</button>
+        </div>
+        <div class="flex-row">
+            <span>Confidence Threshold:</span>
+            <input type="range" id="confThreshold" min="50" max="100" value="85" step="1" class="slider">
+            <span id="thresholdValue">85%</span>
         </div>
         <div class="status" id="statusDisplay">⏸️ Auto trade OFF | Waiting for signal...</div>
         <div class="debug" id="debugInfo"></div>
@@ -92,6 +99,7 @@
     let autoEnabled = localStorage.getItem(`autoEnabled_${currentUser}`) === 'true';
     let selectedTF = localStorage.getItem(`timeframe_${currentUser}`) || '15m';
     let audioEnabled = localStorage.getItem(`audioEnabled_${currentUser}`) === 'true';
+    let confThreshold = parseInt(localStorage.getItem(`confThreshold_${currentUser}`)) || 85;
 
     if (!usersData[currentUser]) {
         usersData[currentUser] = {
@@ -154,7 +162,7 @@
     let currentLeverage = parseInt(document.getElementById('leverageSelect')?.value) || 5;
 
     function executeTrade(type, isAuto = false) {
-        const amount = 500;   // Fixed $500 per trade
+        const amount = 500;
         const userData = usersData[currentUser];
         if (amount > userData.balance) {
             showNotification('Insufficient balance!', 'error');
@@ -281,7 +289,6 @@
         if (signalData) {
             try {
                 const data = JSON.parse(signalData);
-                // Only accept signals younger than 10 seconds
                 if (Date.now() - data.timestamp < 10000) {
                     currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
                     currentRSI = parseFloat(data.rsi) || 50;
@@ -292,7 +299,12 @@
                     let statusMsg = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
                     statusMsg += ` | Signal: ${currentSignal || 'N/A'} | RSI: ${currentRSI.toFixed(1)} | Conf: ${currentConfidence.toFixed(0)}% | Price: $${currentPrice.toFixed(2)}`;
                     document.getElementById('statusDisplay').innerHTML = statusMsg;
-                    document.getElementById('debugInfo').innerHTML = `Last signal: ${new Date(lastSignalTimestamp).toLocaleTimeString()} | Conditions: BUY=${currentSignal==='BUY' && currentRSI<30 && currentConfidence>=85} | SELL=${currentSignal==='SELL' && currentRSI>70 && currentConfidence>=85}`;
+                    
+                    let buyOk = (currentSignal === 'BUY' && currentRSI < 30 && currentConfidence >= confThreshold);
+                    let sellOk = (currentSignal === 'SELL' && currentRSI > 70 && currentConfidence >= confThreshold);
+                    document.getElementById('debugInfo').innerHTML = `Last signal: ${new Date(lastSignalTimestamp).toLocaleTimeString()} | Threshold: ${confThreshold}%<br>
+                    BUY condition: Signal=BUY? ${currentSignal==='BUY'} | RSI<30? ${currentRSI<30} | Conf>=${confThreshold}? ${currentConfidence>=confThreshold} → ${buyOk ? '✅ READY' : '❌'}<br>
+                    SELL condition: Signal=SELL? ${currentSignal==='SELL'} | RSI>70? ${currentRSI>70} | Conf>=${confThreshold}? ${currentConfidence>=confThreshold} → ${sellOk ? '✅ READY' : '❌'}`;
                     return;
                 } else {
                     document.getElementById('debugInfo').innerHTML = 'Signal stale (>10s old)';
@@ -303,7 +315,7 @@
         } else {
             document.getElementById('statusDisplay').innerHTML = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
             document.getElementById('statusDisplay').innerHTML += ' | ⚠️ No signal in localStorage (key: sharedSignal)';
-            document.getElementById('debugInfo').innerHTML = 'Waiting for main website to write sharedSignal.';
+            document.getElementById('debugInfo').innerHTML = 'Waiting for main website to write sharedSignal. Make sure it includes "confidence" field.';
         }
     }
 
@@ -312,10 +324,10 @@
     // ==================== AUTO TRADING LOOP ====================
     let autoInterval = null;
     let lastTradeTime = 0;
-    const COOLDOWN = 60000; // 1 minute
+    const COOLDOWN = 60000;
 
     function checkAndTrade() {
-        autoClosePositions(); // close any positions that hit TP/SL
+        autoClosePositions();
         if (!autoEnabled) return;
         if (!currentSignal) return;
         const userData = usersData[currentUser];
@@ -323,12 +335,9 @@
         if (Date.now() - lastTradeTime < COOLDOWN) return;
 
         let action = null;
-        // BUY condition: finalSignal = BUY, RSI < 30, Confidence >= 85%
-        if (currentSignal === 'BUY' && currentRSI < 30 && currentConfidence >= 85) {
+        if (currentSignal === 'BUY' && currentRSI < 30 && currentConfidence >= confThreshold) {
             action = 'buy';
-        }
-        // SELL condition: finalSignal = SELL, RSI > 70, Confidence >= 85%
-        else if (currentSignal === 'SELL' && currentRSI > 70 && currentConfidence >= 85) {
+        } else if (currentSignal === 'SELL' && currentRSI > 70 && currentConfidence >= confThreshold) {
             action = 'sell';
         }
         if (action) {
@@ -356,6 +365,16 @@
     const historyBtn = document.getElementById('historyBtn');
     const resetDataBtn = document.getElementById('resetDataBtn');
     const leverageSelect = document.getElementById('leverageSelect');
+    const confSlider = document.getElementById('confThreshold');
+    const thresholdSpan = document.getElementById('thresholdValue');
+
+    confSlider.value = confThreshold;
+    thresholdSpan.innerText = confThreshold + '%';
+    confSlider.oninput = () => {
+        confThreshold = parseInt(confSlider.value);
+        thresholdSpan.innerText = confThreshold + '%';
+        localStorage.setItem(`confThreshold_${currentUser}`, confThreshold);
+    };
 
     timeframeSelect.value = selectedTF;
     if (autoEnabled) {
