@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Fixed $500 per trade</title>
+    <title>Auto Trading Bot - Fixed $500 | Auto TP/SL</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -15,7 +15,8 @@
         button:hover, select:hover { background: #3B82F6; transform: translateY(-2px); }
         .btn-buy { background: #22C55E; border-color: #22C55E; }
         .btn-sell { background: #EF4444; border-color: #EF4444; }
-        .status { background: #1A1F33; border-radius: 12px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #F59E0B; }
+        .status { background: #1A1F33; border-radius: 12px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #F59E0B; margin-bottom: 10px; }
+        .debug { font-size: 0.75rem; color: #94A3B8; margin-top: 5px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2A3045; }
         th { background: #1A1F33; color: #94A3B8; }
@@ -28,13 +29,13 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Persistent Auto Trading Bot (Fixed $500 per trade)</h3>
-        <p style="color:#94A3B8; margin-bottom:15px;">Reads signals from main website via <code>localStorage</code> (key: <code>sharedSignal</code>). Every trade (manual or auto) uses exactly <strong>$500</strong> margin.</p>
+        <h3>🤖 Auto Trading Bot (Fixed $500 per trade)</h3>
+        <p style="color:#94A3B8; margin-bottom:15px;">Reads <strong>finalSignal</strong> (BUY/SELL) and <strong>RSI</strong> from main website via <code>localStorage</code> (key: <code>sharedSignal</code>). Auto‑trades when conditions are met.</p>
         <div class="flex-row">
             <select id="timeframeSelect">
                 <option value="1m">1m</option>
-                <option value="5m" selected>5m</option>
-                <option value="15m">15m</option>
+                <option value="5m">5m</option>
+                <option value="15m" selected>15m</option>
                 <option value="1h">1h</option>
                 <option value="4h">4h</option>
                 <option value="1D">1D</option>
@@ -47,6 +48,7 @@
             <button id="resetDataBtn" style="background:#6B7280;">🔄 Reset Demo Data</button>
         </div>
         <div class="status" id="statusDisplay">⏸️ Auto trade OFF | Waiting for signal...</div>
+        <div class="debug" id="debugInfo"></div>
     </div>
 
     <div class="card">
@@ -85,7 +87,7 @@
     let usersData = JSON.parse(localStorage.getItem('autoBotUsersData')) || {};
     
     let autoEnabled = localStorage.getItem(`autoEnabled_${currentUser}`) === 'true';
-    let selectedTF = localStorage.getItem(`timeframe_${currentUser}`) || '5m';
+    let selectedTF = localStorage.getItem(`timeframe_${currentUser}`) || '15m';
     let audioEnabled = localStorage.getItem(`audioEnabled_${currentUser}`) === 'true';
 
     if (!usersData[currentUser]) {
@@ -211,7 +213,7 @@
         speakMessage('Right time close trade');
     };
 
-    // ==================== AUTO CLOSE (TP/SL) ====================
+    // ==================== AUTO CLOSE (TP/SL based on timeframe) ====================
     function getTPSLByTimeframe(tf) {
         switch(tf) {
             case '1m':  return { tp: 0.0025, sl: 0.0012 };
@@ -268,22 +270,37 @@
     // ==================== SIGNAL READING FROM localStorage ====================
     let currentSignal = null;
     let currentRSI = 50;
+    let lastSignalTimestamp = 0;
 
     function readSignalFromLocalStorage() {
         const signalData = localStorage.getItem('sharedSignal');
         if (signalData) {
             try {
                 const data = JSON.parse(signalData);
+                // Only accept signals younger than 10 seconds
                 if (Date.now() - data.timestamp < 10000) {
-                    currentSignal = data.finalSignal;
-                    currentRSI = data.rsi;
+                    currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
+                    currentRSI = parseFloat(data.rsi) || 50;
                     if (data.price) currentPrice = data.price;
-                    document.getElementById('statusDisplay').innerHTML = `🟢 Signal: ${currentSignal || 'N/A'} | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
+                    lastSignalTimestamp = data.timestamp;
+                    
+                    // Update status display
+                    let statusMsg = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
+                    statusMsg += ` | Signal: ${currentSignal || 'N/A'} | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
+                    document.getElementById('statusDisplay').innerHTML = statusMsg;
+                    document.getElementById('debugInfo').innerHTML = `Last signal received: ${new Date(lastSignalTimestamp).toLocaleTimeString()} | Condition for SELL: ${currentSignal === 'SELL'} && RSI>70 = ${currentRSI > 70}`;
                     return;
+                } else {
+                    document.getElementById('debugInfo').innerHTML = 'Signal stale (>10s old)';
                 }
-            } catch(e) {}
+            } catch(e) {
+                document.getElementById('debugInfo').innerHTML = 'Error parsing signal: ' + e.message;
+            }
+        } else {
+            document.getElementById('statusDisplay').innerHTML = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
+            document.getElementById('statusDisplay').innerHTML += ' | ⚠️ No signal in localStorage (key: sharedSignal)';
+            document.getElementById('debugInfo').innerHTML = 'Waiting for main website to write sharedSignal.';
         }
-        document.getElementById('statusDisplay').innerHTML = `⚠️ Waiting for signal from main website... (check sharedSignal in localStorage)`;
     }
 
     setInterval(readSignalFromLocalStorage, 2000);
@@ -291,33 +308,50 @@
     // ==================== AUTO TRADING LOOP ====================
     let autoInterval = null;
     let lastTradeTime = 0;
-    const COOLDOWN = 60000;
+    const COOLDOWN = 60000; // 1 minute
 
     function checkAndTrade() {
-        autoClosePositions();
+        autoClosePositions(); // close any positions that hit TP/SL
         if (!autoEnabled) return;
-        if (!currentSignal) return;
+        if (!currentSignal) {
+            console.log('Auto trade: no signal yet');
+            return;
+        }
         const userData = usersData[currentUser];
-        if (userData.positions.length > 0) return;
-        if (Date.now() - lastTradeTime < COOLDOWN) return;
+        if (userData.positions.length > 0) {
+            console.log('Auto trade: position exists, waiting');
+            return;
+        }
+        if (Date.now() - lastTradeTime < COOLDOWN) {
+            console.log('Auto trade: cooldown active');
+            return;
+        }
 
         let action = null;
-        if (currentSignal === 'BUY' && currentRSI < 30) action = 'buy';
-        else if (currentSignal === 'SELL' && currentRSI > 70) action = 'sell';
-        if (!action) return;
-
-        if (executeTrade(action, true)) {
-            lastTradeTime = Date.now();
+        if (currentSignal === 'BUY' && currentRSI < 30) {
+            action = 'buy';
+        } else if (currentSignal === 'SELL' && currentRSI > 70) {
+            action = 'sell';
+        }
+        if (action) {
+            console.log(`Auto trade condition met: ${action} (signal=${currentSignal}, rsi=${currentRSI})`);
+            if (executeTrade(action, true)) {
+                lastTradeTime = Date.now();
+            }
+        } else {
+            console.log(`Auto trade condition not met: signal=${currentSignal}, rsi=${currentRSI}`);
         }
     }
 
     function startAutoLoop() {
         if (autoInterval) clearInterval(autoInterval);
-        autoInterval = setInterval(checkAndTrade, 10000);
+        autoInterval = setInterval(checkAndTrade, 10000); // check every 10 seconds
+        console.log('Auto trading loop started');
     }
     function stopAutoLoop() {
         if (autoInterval) clearInterval(autoInterval);
         autoInterval = null;
+        console.log('Auto trading loop stopped');
     }
 
     // ==================== UI CONTROLS ====================
@@ -361,6 +395,7 @@
     timeframeSelect.onchange = () => {
         selectedTF = timeframeSelect.value;
         localStorage.setItem(`timeframe_${currentUser}`, selectedTF);
+        showNotification(`Timeframe changed to ${selectedTF} | TP/SL updated`, 'info');
     };
 
     testBuyBtn.onclick = () => executeTrade('buy', false);
@@ -409,6 +444,7 @@
     }
     historyBtn.onclick = showTradeHistory;
 
+    // ==================== AUDIO ALERTS ====================
     function speakMessage(message) {
         if (!audioEnabled) return;
         let count = 0;
@@ -433,6 +469,7 @@
         setTimeout(() => notif.remove(), 3000);
     }
 
+    // ==================== INITIALIZE ====================
     loadUserData();
     readSignalFromLocalStorage();
     setInterval(() => {
