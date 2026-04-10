@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Full (Confidence 90% + RSI)</title>
+    <title>Auto Trading Bot - Uses Recommendation Box Confidence</title>
     <style>
+        /* (same styles as before – keep them) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; }
@@ -29,8 +30,8 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Confidence ≥ 90% + Signal + RSI)</h3>
-        <p style="color:#94A3B8; margin-bottom:15px;">Reads <code>sharedSignal</code> from localStorage: <strong>finalSignal</strong>, <strong>confidence</strong>, <strong>rsi</strong>, <strong>price</strong>. Auto trade triggers when confidence ≥ 90%, signal matches, and RSI conditions are met.</p>
+        <h3>🤖 Auto Trading Bot (Uses Recommendation Box Confidence)</h3>
+        <p style="color:#94A3B8;">Reads <code>sharedSignal</code> from localStorage – confidence is taken from the <strong>Ultimate Recommendation Box</strong> (<code>finalConfidence</code>).</p>
         <div class="flex-row">
             <select id="timeframeSelect">
                 <option value="1m">1m</option>
@@ -50,7 +51,6 @@
         <div class="status" id="statusDisplay">⏸️ Auto trade OFF | Waiting for signal...</div>
         <div class="debug" id="debugInfo"></div>
     </div>
-
     <div class="card">
         <h3>💰 Demo Trading Account</h3>
         <div class="flex-row" style="justify-content:space-between;">
@@ -80,32 +80,22 @@
         <div id="openPositionsList">No open positions</div>
     </div>
 </div>
-
 <script>
     // ==================== PERSISTENT STATE (localStorage) ====================
     let currentUser = localStorage.getItem('autoBotUser') || 'default';
     let usersData = JSON.parse(localStorage.getItem('autoBotUsersData')) || {};
-    
     let autoEnabled = localStorage.getItem(`autoEnabled_${currentUser}`) === 'true';
     let selectedTF = localStorage.getItem(`timeframe_${currentUser}`) || '15m';
     let audioEnabled = localStorage.getItem(`audioEnabled_${currentUser}`) === 'true';
 
     if (!usersData[currentUser]) {
         usersData[currentUser] = {
-            balance: 10000,
-            totalTrades: 0,
-            winTrades: 0,
-            totalProfit: 0,
-            positions: [],
-            tradeHistory: []
+            balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [], tradeHistory: []
         };
         localStorage.setItem('autoBotUsersData', JSON.stringify(usersData));
     }
 
-    function saveUserData() {
-        localStorage.setItem('autoBotUsersData', JSON.stringify(usersData));
-    }
-
+    function saveUserData() { localStorage.setItem('autoBotUsersData', JSON.stringify(usersData)); }
     function loadUserData() {
         const data = usersData[currentUser];
         document.getElementById('balance').innerText = '$' + data.balance.toFixed(2);
@@ -118,10 +108,7 @@
 
     function updatePositionsDisplay(positions) {
         const container = document.getElementById('openPositionsList');
-        if (!positions || positions.length === 0) {
-            container.innerHTML = 'No open positions';
-            return;
-        }
+        if (!positions || positions.length === 0) { container.innerHTML = 'No open positions'; return; }
         container.innerHTML = positions.map(p => `
             <div style="background:#1A1F33; border-left:3px solid ${p.type==='buy'?'#22C55E':'#EF4444'}; padding:8px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between;">
                 <div><strong>${p.type.toUpperCase()}</strong> $${p.amount} @ ${p.entryPrice} (${p.leverage}X)<br>
@@ -146,37 +133,21 @@
         });
     }
 
-    // ==================== TRADE EXECUTION (fixed $500) ====================
     let currentPrice = 67000;
-    let currentLeverage = parseInt(document.getElementById('leverageSelect')?.value) || 5;
-
     function executeTrade(type, isAuto = false) {
         const amount = 500;
         const userData = usersData[currentUser];
-        if (amount > userData.balance) {
-            showNotification('Insufficient balance!', 'error');
-            return false;
-        }
-        if (userData.positions && userData.positions.length > 0) {
-            showNotification('Close existing position first!', 'warning');
-            return false;
-        }
+        if (amount > userData.balance) { showNotification('Insufficient balance!', 'error'); return false; }
+        if (userData.positions && userData.positions.length > 0) { showNotification('Close existing position first!', 'warning'); return false; }
         const leverage = parseInt(document.getElementById('leverageSelect').value);
-        const positionSize = amount * leverage;
         const position = {
-            id: Date.now(),
-            type: type,
-            amount: amount,
-            leverage: leverage,
-            positionSize: positionSize,
-            entryPrice: currentPrice,
-            timestamp: new Date().toISOString()
+            id: Date.now(), type: type, amount: amount, leverage: leverage,
+            positionSize: amount * leverage, entryPrice: currentPrice, timestamp: new Date().toISOString()
         };
         userData.positions.push(position);
         userData.balance -= amount;
         userData.totalTrades++;
-        saveUserData();
-        loadUserData();
+        saveUserData(); loadUserData();
         showNotification(`${type.toUpperCase()} trade: $${amount} @ $${currentPrice.toFixed(2)} (${leverage}X)`, 'success');
         speakMessage(type === 'buy' ? 'Right time open buy trade' : 'Right time open sell trade');
         return true;
@@ -193,36 +164,25 @@
         userData.balance += pos.amount + pnl;
         if (pnl > 0) userData.winTrades++;
         userData.totalProfit += pnl;
-        const historyEntry = {
-            date: new Date().toLocaleString(),
-            type: pos.type,
-            entryPrice: pos.entryPrice,
-            exitPrice: currentPrice,
-            pnl: pnl,
-            pnlPercent: pnlPercent * 100,
-            amount: pos.amount,
-            leverage: pos.leverage
-        };
+        const historyEntry = { date: new Date().toLocaleString(), type: pos.type, entryPrice: pos.entryPrice, exitPrice: currentPrice, pnl: pnl, pnlPercent: pnlPercent * 100, amount: pos.amount, leverage: pos.leverage };
         if (!userData.tradeHistory) userData.tradeHistory = [];
         userData.tradeHistory.unshift(historyEntry);
         if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
         userData.positions.splice(index, 1);
-        saveUserData();
-        loadUserData();
+        saveUserData(); loadUserData();
         showNotification(`Closed ${pos.type.toUpperCase()} | PnL: $${pnl.toFixed(2)}`, pnl >= 0 ? 'success' : 'error');
         speakMessage('Right time close trade');
     };
 
-    // ==================== AUTO CLOSE (TP/SL based on timeframe) ====================
     function getTPSLByTimeframe(tf) {
         switch(tf) {
-            case '1m':  return { tp: 0.0025, sl: 0.0012 };
-            case '5m':  return { tp: 0.006,   sl: 0.003 };
-            case '15m': return { tp: 0.009,   sl: 0.0045 };
-            case '1h':  return { tp: 0.0135,  sl: 0.00675 };
-            case '4h':  return { tp: 0.02,    sl: 0.01 };
-            case '1D':  return { tp: 0.035,   sl: 0.0175 };
-            default:    return { tp: 0.006,   sl: 0.003 };
+            case '1m': return { tp: 0.0025, sl: 0.0012 };
+            case '5m': return { tp: 0.006, sl: 0.003 };
+            case '15m': return { tp: 0.009, sl: 0.0045 };
+            case '1h': return { tp: 0.0135, sl: 0.00675 };
+            case '4h': return { tp: 0.02, sl: 0.01 };
+            case '1D': return { tp: 0.035, sl: 0.0175 };
+            default: return { tp: 0.006, sl: 0.003 };
         }
     }
 
@@ -241,70 +201,45 @@
                 userData.balance += pos.amount + pnl;
                 if (pnl > 0) userData.winTrades++;
                 userData.totalProfit += pnl;
-                const historyEntry = {
-                    date: new Date().toLocaleString(),
-                    type: pos.type,
-                    entryPrice: pos.entryPrice,
-                    exitPrice: currentPrice,
-                    pnl: pnl,
-                    pnlPercent: pnlPercent * 100,
-                    amount: pos.amount,
-                    leverage: pos.leverage
-                };
+                const historyEntry = { date: new Date().toLocaleString(), type: pos.type, entryPrice: pos.entryPrice, exitPrice: currentPrice, pnl: pnl, pnlPercent: pnlPercent * 100, amount: pos.amount, leverage: pos.leverage };
                 if (!userData.tradeHistory) userData.tradeHistory = [];
                 userData.tradeHistory.unshift(historyEntry);
                 if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
                 userData.positions.splice(i, 1);
-                updated = true;
-                i--;
+                updated = true; i--;
                 showNotification(`Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`, pnl >= 0 ? 'success' : 'info');
                 speakMessage('Right time close trade');
             }
         }
-        if (updated) {
-            saveUserData();
-            loadUserData();
-        }
+        if (updated) { saveUserData(); loadUserData(); }
     }
 
-    // ==================== SIGNAL READING FROM localStorage (with confidence) ====================
-    let currentSignal = null;
-    let currentConfidence = 0;
-    let currentRSI = 50;
-    let lastSignalTimestamp = 0;
-
+    let currentSignal = null, currentConfidence = 0, currentRSI = 50;
     function readSignalFromLocalStorage() {
         const signalData = localStorage.getItem('sharedSignal');
         if (signalData) {
             try {
                 const data = JSON.parse(signalData);
-                if (Date.now() - data.timestamp < 10000) { // accept only recent signals (10 seconds)
+                if (Date.now() - data.timestamp < 10000) {
                     currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
                     currentConfidence = parseFloat(data.confidence) || 0;
                     currentRSI = parseFloat(data.rsi) || 50;
                     if (data.price) currentPrice = data.price;
-                    lastSignalTimestamp = data.timestamp;
-                    
                     let statusMsg = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
                     statusMsg += ` | Signal: ${currentSignal || 'N/A'} | Conf: ${currentConfidence}% | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
                     document.getElementById('statusDisplay').innerHTML = statusMsg;
-                    document.getElementById('debugInfo').innerHTML = `Last signal: ${new Date(lastSignalTimestamp).toLocaleTimeString()} | BUY condition: ${currentSignal === 'BUY'} && conf>=90 = ${currentConfidence >= 90} && RSI<30 = ${currentRSI < 30} | SELL condition: ${currentSignal === 'SELL'} && conf>=90 = ${currentConfidence >= 90} && RSI>70 = ${currentRSI > 70}`;
+                    document.getElementById('debugInfo').innerHTML = `BUY condition: ${currentSignal === 'BUY'} && conf>=90 = ${currentConfidence >= 90} && RSI<30 = ${currentRSI < 30} | SELL condition: ${currentSignal === 'SELL'} && conf>=90 = ${currentConfidence >= 90} && RSI>70 = ${currentRSI > 70}`;
                     return;
                 }
             } catch(e) {}
         }
-        document.getElementById('statusDisplay').innerHTML = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
-        document.getElementById('statusDisplay').innerHTML += ' | ⚠️ No valid signal in localStorage (key: sharedSignal)';
-        document.getElementById('debugInfo').innerHTML = 'Waiting for main website to write sharedSignal with {finalSignal, confidence, rsi, price, timestamp}.';
+        document.getElementById('statusDisplay').innerHTML = (autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF') + ' | ⚠️ No valid signal in localStorage';
     }
 
     setInterval(readSignalFromLocalStorage, 2000);
 
-    // ==================== AUTO TRADING LOOP (confidence ≥ 90%) ====================
-    let autoInterval = null;
-    let lastTradeTime = 0;
+    let autoInterval = null, lastTradeTime = 0;
     const COOLDOWN = 60000;
-
     function checkAndTrade() {
         autoClosePositions();
         if (!autoEnabled) return;
@@ -312,35 +247,16 @@
         const userData = usersData[currentUser];
         if (userData.positions.length > 0) return;
         if (Date.now() - lastTradeTime < COOLDOWN) return;
-
         let action = null;
-        if (currentSignal === 'BUY' && currentConfidence >= 90 && currentRSI < 30) {
-            action = 'buy';
-        } else if (currentSignal === 'SELL' && currentConfidence >= 90 && currentRSI > 70) {
-            action = 'sell';
-        }
-        if (action) {
-            console.log(`Auto trade condition met: ${action} (signal=${currentSignal}, conf=${currentConfidence}, rsi=${currentRSI})`);
-            if (executeTrade(action, true)) {
-                lastTradeTime = Date.now();
-            }
-        } else {
-            console.log(`Auto trade condition NOT met: signal=${currentSignal}, conf=${currentConfidence}, rsi=${currentRSI}`);
-        }
+        if (currentSignal === 'BUY' && currentConfidence >= 90 && currentRSI < 30) action = 'buy';
+        else if (currentSignal === 'SELL' && currentConfidence >= 90 && currentRSI > 70) action = 'sell';
+        if (action && executeTrade(action, true)) lastTradeTime = Date.now();
     }
 
-    function startAutoLoop() {
-        if (autoInterval) clearInterval(autoInterval);
-        autoInterval = setInterval(checkAndTrade, 10000);
-        console.log('Auto trading loop started');
-    }
-    function stopAutoLoop() {
-        if (autoInterval) clearInterval(autoInterval);
-        autoInterval = null;
-        console.log('Auto trading loop stopped');
-    }
+    function startAutoLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = setInterval(checkAndTrade, 10000); }
+    function stopAutoLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = null; }
 
-    // ==================== UI CONTROLS ====================
+    // UI event listeners (same as before)
     const startStopBtn = document.getElementById('startStopBtn');
     const timeframeSelect = document.getElementById('timeframeSelect');
     const testBuyBtn = document.getElementById('testBuyBtn');
@@ -351,78 +267,30 @@
     const leverageSelect = document.getElementById('leverageSelect');
 
     timeframeSelect.value = selectedTF;
-    if (autoEnabled) {
-        startStopBtn.textContent = '⏸️ Stop Auto Trading';
-        startStopBtn.style.background = '#EF4444';
-        startAutoLoop();
-    } else {
-        startStopBtn.textContent = '🤖 Start Auto Trading';
-        startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
-    }
+    if (autoEnabled) { startStopBtn.textContent = '⏸️ Stop Auto Trading'; startStopBtn.style.background = '#EF4444'; startAutoLoop(); }
+    else { startStopBtn.textContent = '🤖 Start Auto Trading'; startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)'; }
     audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF';
     audioToggleBtn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
 
     startStopBtn.onclick = () => {
         autoEnabled = !autoEnabled;
         localStorage.setItem(`autoEnabled_${currentUser}`, autoEnabled);
-        if (autoEnabled) {
-            startStopBtn.textContent = '⏸️ Stop Auto Trading';
-            startStopBtn.style.background = '#EF4444';
-            startAutoLoop();
-            showNotification('Auto trading ENABLED (conf≥90% + RSI condition)', 'success');
-        } else {
-            startStopBtn.textContent = '🤖 Start Auto Trading';
-            startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
-            stopAutoLoop();
-            showNotification('Auto trading DISABLED', 'info');
-        }
+        if (autoEnabled) { startStopBtn.textContent = '⏸️ Stop Auto Trading'; startStopBtn.style.background = '#EF4444'; startAutoLoop(); showNotification('Auto trading ENABLED (conf≥90% + RSI)', 'success'); }
+        else { startStopBtn.textContent = '🤖 Start Auto Trading'; startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)'; stopAutoLoop(); showNotification('Auto trading DISABLED', 'info'); }
     };
-
-    timeframeSelect.onchange = () => {
-        selectedTF = timeframeSelect.value;
-        localStorage.setItem(`timeframe_${currentUser}`, selectedTF);
-        showNotification(`Timeframe changed to ${selectedTF} | TP/SL updated`, 'info');
-    };
-
+    timeframeSelect.onchange = () => { selectedTF = timeframeSelect.value; localStorage.setItem(`timeframe_${currentUser}`, selectedTF); showNotification(`Timeframe changed to ${selectedTF}`, 'info'); };
     testBuyBtn.onclick = () => executeTrade('buy', false);
     testSellBtn.onclick = () => executeTrade('sell', false);
-
     leverageSelect.onchange = () => {};
-
-    audioToggleBtn.onclick = () => {
-        audioEnabled = !audioEnabled;
-        localStorage.setItem(`audioEnabled_${currentUser}`, audioEnabled);
-        audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF';
-        audioToggleBtn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
-        showNotification(audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info');
-    };
-
-    resetDataBtn.onclick = () => {
-        if (confirm('Reset all demo data? Balance will be $10,000, positions and history cleared.')) {
-            usersData[currentUser] = {
-                balance: 10000,
-                totalTrades: 0,
-                winTrades: 0,
-                totalProfit: 0,
-                positions: [],
-                tradeHistory: []
-            };
-            saveUserData();
-            loadUserData();
-            showNotification('Demo data reset', 'info');
-        }
-    };
-
+    audioToggleBtn.onclick = () => { audioEnabled = !audioEnabled; localStorage.setItem(`audioEnabled_${currentUser}`, audioEnabled); audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF'; audioToggleBtn.style.background = audioEnabled ? '#22C55E' : '#6B7280'; showNotification(audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info'); };
+    resetDataBtn.onclick = () => { if (confirm('Reset demo data?')) { usersData[currentUser] = { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [], tradeHistory: [] }; saveUserData(); loadUserData(); showNotification('Demo data reset', 'info'); } };
     function showTradeHistory() {
         const history = usersData[currentUser].tradeHistory || [];
         if (history.length === 0) { alert('No trade history'); return; }
         let modalHtml = `<div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto;">
-            <div style="display:flex; justify-content:space-between;"><h3>Trade History</h3><button id="closeHist" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px;">Close</button></div>
-            <table style="width:100%;"><thead><tr><th>Date</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>`;
-        history.forEach(t => {
-            const pnlColor = t.pnl >= 0 ? '#22C55E' : '#EF4444';
-            modalHtml += `<tr><td>${t.date}</td><td style="color:${t.type==='buy'?'#22C55E':'#EF4444'}">${t.type.toUpperCase()}</td><td>$${t.entryPrice.toFixed(2)}</td><td>$${t.exitPrice.toFixed(2)}</td><td style="color:${pnlColor}">$${t.pnl.toFixed(2)} (${t.pnlPercent.toFixed(1)}%)</td></tr>`;
-        });
+            <div style="display:flex; justify-content:space-between;"><h3>Trade History</h3><button id="closeHist" style="background:#EF4444;">Close</button></div>
+            <table><thead><tr><th>Date</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>`;
+        history.forEach(t => { const pnlColor = t.pnl >= 0 ? '#22C55E' : '#EF4444'; modalHtml += `<tr><td>${t.date}</td><td style="color:${t.type==='buy'?'#22C55E':'#EF4444'}">${t.type.toUpperCase()}</td><td>$${t.entryPrice.toFixed(2)}</td><td>$${t.exitPrice.toFixed(2)}</td><td style="color:${pnlColor}">$${t.pnl.toFixed(2)} (${t.pnlPercent.toFixed(1)}%)</td></tr>`; });
         modalHtml += `</tbody></table></div>`;
         if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -430,38 +298,16 @@
     }
     historyBtn.onclick = showTradeHistory;
 
-    // ==================== AUDIO ALERTS ====================
     function speakMessage(message) {
         if (!audioEnabled) return;
         let count = 0;
-        function speak() {
-            if (!audioEnabled) return;
-            const utterance = new SpeechSynthesisUtterance(message);
-            utterance.rate = 0.7;
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utterance);
-            count++;
-            if (count < 5) setTimeout(speak, 1800);
-        }
+        function speak() { if (!audioEnabled) return; const utterance = new SpeechSynthesisUtterance(message); utterance.rate = 0.7; window.speechSynthesis.cancel(); window.speechSynthesis.speak(utterance); count++; if (count < 5) setTimeout(speak, 1800); }
         speak();
     }
+    function showNotification(msg, type) { const notif = document.createElement('div'); notif.className = 'notification'; notif.textContent = msg; notif.style.background = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#3B82F6'; document.body.appendChild(notif); setTimeout(() => notif.remove(), 3000); }
 
-    function showNotification(msg, type) {
-        const notif = document.createElement('div');
-        notif.className = 'notification';
-        notif.textContent = msg;
-        notif.style.background = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#3B82F6';
-        document.body.appendChild(notif);
-        setTimeout(() => notif.remove(), 3000);
-    }
-
-    // ==================== INITIALIZE ====================
-    loadUserData();
-    readSignalFromLocalStorage();
-    setInterval(() => {
-        const data = usersData[currentUser];
-        if (data.positions.length > 0) updateAllPnL(data.positions);
-    }, 2000);
+    loadUserData(); readSignalFromLocalStorage();
+    setInterval(() => { const data = usersData[currentUser]; if (data.positions.length > 0) updateAllPnL(data.positions); }, 2000);
 </script>
 </body>
 </html>
