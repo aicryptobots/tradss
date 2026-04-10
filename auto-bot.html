@@ -2,298 +2,198 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Reads ONLY Recommendation Box</title>
+    <title>Auto Bot - Rec Box Only</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { background: #0B0F1C; border: 1px solid #2A3045; border-radius: 20px; padding: 20px; margin-bottom: 20px; }
-        .card h3 { color: #3B82F6; margin-bottom: 15px; }
-        .flex-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; }
-        button, select, input { background: #1A1F33; border: 1px solid #3B82F6; border-radius: 8px; padding: 8px 16px; color: white; cursor: pointer; }
-        button:hover, select:hover { background: #3B82F6; transform: translateY(-2px); }
-        .btn-buy { background: #22C55E; border-color: #22C55E; }
-        .btn-sell { background: #EF4444; border-color: #EF4444; }
-        .status { background: #1A1F33; border-radius: 12px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #F59E0B; margin-bottom: 10px; }
-        .debug { font-size: 0.75rem; color: #94A3B8; margin-top: 5px; }
-        .notification { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; z-index: 10001; }
-        input:read-only { opacity: 0.7; cursor: not-allowed; }
+        body { font-family: Arial; background: #03050A; color: white; padding: 20px; }
+        .card { background: #0B0F1C; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        button, select { background: #1A1F33; border: 1px solid #3B82F6; border-radius: 8px; padding: 8px 16px; color: white; cursor: pointer; }
+        .status { background: #1A1F33; padding: 10px; border-radius: 12px; font-family: monospace; }
+        .positive { color: #22C55E; }
+        .negative { color: #EF4444; }
     </style>
 </head>
 <body>
-<div class="container">
+<div style="max-width: 700px; margin: auto;">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Reads Recommendation Box Signal Only)</h3>
-        <p style="color:#94A3B8;">উৎস: <code>recBoxSignal</code> – শুধু আপনার ওয়েবসাইটের <strong>ULTIMATE TRADING RECOMMENDATION BOX</strong> থেকে ডাটা নেয়। চার্টের AI সিগন্যাল সম্পূর্ণ উপেক্ষা করা হয়।</p>
-        <div class="flex-row">
-            <select id="timeframeSelect">
+        <h2>🤖 Auto Trading Bot (Rec Box Signal Only)</h2>
+        <p>এই বট শুধু <strong>ULTIMATE TRADING RECOMMENDATION BOX</strong> এর সিগন্যাল ও কনফিডেন্স ব্যবহার করে। চার্টের AI সিগন্যাল সম্পূর্ণ উপেক্ষিত।</p>
+        <div>
+            <select id="timeframe">
                 <option value="1m">1m</option><option value="5m">5m</option>
                 <option value="15m" selected>15m</option><option value="1h">1h</option>
                 <option value="4h">4h</option><option value="1D">1D</option>
             </select>
-            <button id="startStopBtn">🤖 Start Auto Trading</button>
-            <button id="testBuyBtn" class="btn-buy">🔵 Test BUY ($500)</button>
-            <button id="testSellBtn" class="btn-sell">🔴 Test SELL ($500)</button>
-            <button id="audioToggleBtn">🔊 Audio ON</button>
-            <button id="historyBtn">📜 Trade History</button>
-            <button id="resetDataBtn" style="background:#6B7280;">🔄 Reset Demo Data</button>
+            <button id="startStop">🤖 Start Auto Trading</button>
+            <button id="testBuy" style="background:#22C55E;">🔵 Test BUY ($500)</button>
+            <button id="testSell" style="background:#EF4444;">🔴 Test SELL ($500)</button>
+            <button id="audioToggle">🔊 Audio ON</button>
+            <button id="historyBtn">📜 History</button>
+            <button id="resetBtn">🔄 Reset Data</button>
         </div>
-        <div class="status" id="statusDisplay">⏸️ Auto trade OFF | Waiting for signal...</div>
-        <div class="debug" id="debugInfo"></div>
+        <div class="status" id="status">⏸️ Auto trade OFF | Waiting for signal...</div>
+        <div id="debug" style="font-size:12px; color:#888; margin-top:10px;"></div>
     </div>
     <div class="card">
-        <h3>💰 Demo Trading Account</h3>
-        <div class="flex-row" style="justify-content:space-between;">
-            <div>Balance: <span id="balance">$10,000.00</span></div>
-            <div>P&L: <span id="totalPnl">$0.00</span></div>
-            <div>Trades: <span id="totalTrades">0</span></div>
-            <div>Win Rate: <span id="winRate">0%</span></div>
-        </div>
-        <div class="flex-row">
-            <label>Trade Amount ($):</label>
-            <input type="number" id="tradeAmount" value="500" readonly style="width:120px;">
-            <label>Leverage:</label>
-            <select id="leverageSelect">
-                <option value="1">1X</option><option value="2">2X</option><option value="3">3X</option>
-                <option value="4">4X</option><option value="5" selected>5X</option><option value="6">6X</option>
-                <option value="7">7X</option><option value="8">8X</option><option value="9">9X</option><option value="10">10X</option>
-            </select>
-        </div>
+        <h3>💰 Demo Account</h3>
+        <div>Balance: <span id="balance">$10,000</span> | P&L: <span id="pnl">$0</span> | Trades: <span id="trades">0</span> | Win: <span id="winRate">0%</span></div>
         <h4>Open Positions</h4>
-        <div id="openPositionsList">No open positions</div>
+        <div id="positions"></div>
     </div>
 </div>
 <script>
-    // ==================== USER DATA (persistent) ====================
-    let currentUser = localStorage.getItem('autoBotUser') || 'default';
-    let usersData = JSON.parse(localStorage.getItem('autoBotUsersData')) || {};
-    let autoEnabled = localStorage.getItem(`autoEnabled_${currentUser}`) === 'true';
-    let selectedTF = localStorage.getItem(`timeframe_${currentUser}`) || '15m';
-    let audioEnabled = localStorage.getItem(`audioEnabled_${currentUser}`) === 'true';
-
-    if (!usersData[currentUser]) {
-        usersData[currentUser] = {
-            balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [], tradeHistory: []
-        };
-        localStorage.setItem('autoBotUsersData', JSON.stringify(usersData));
+    // ========== ইউজার ডাটা (persistent) ==========
+    let user = localStorage.getItem('autoUser') || 'default';
+    let data = JSON.parse(localStorage.getItem('autoData')) || {};
+    if (!data[user]) data[user] = { balance: 10000, trades: 0, wins: 0, profit: 0, positions: [], history: [] };
+    function save() { localStorage.setItem('autoData', JSON.stringify(data)); }
+    function loadUI() {
+        let d = data[user];
+        document.getElementById('balance').innerText = '$' + d.balance.toFixed(2);
+        document.getElementById('pnl').innerText = (d.profit >= 0 ? '+' : '') + '$' + d.profit.toFixed(2);
+        document.getElementById('trades').innerText = d.trades;
+        let wr = d.trades ? (d.wins / d.trades * 100).toFixed(1) : 0;
+        document.getElementById('winRate').innerText = wr + '%';
+        let posDiv = document.getElementById('positions');
+        if (!d.positions.length) posDiv.innerHTML = 'No open positions';
+        else posDiv.innerHTML = d.positions.map(p => `<div style="border-left:3px solid ${p.type==='buy'?'#22C55E':'#EF4444'}; padding:6px; margin:5px 0;">${p.type.toUpperCase()} $${p.amount} @ ${p.entryPrice} (${p.leverage}X) P&L: <span id="pnl_${p.id}">0</span> <button onclick="closePos(${p.id})">X</button></div>`).join('');
     }
-
-    function saveUserData() { localStorage.setItem('autoBotUsersData', JSON.stringify(usersData)); }
-    function loadUserData() {
-        const data = usersData[currentUser];
-        document.getElementById('balance').innerText = '$' + data.balance.toFixed(2);
-        document.getElementById('totalTrades').innerText = data.totalTrades;
-        document.getElementById('totalPnl').innerText = (data.totalProfit >= 0 ? '+' : '') + '$' + data.totalProfit.toFixed(2);
-        const winRate = data.totalTrades > 0 ? (data.winTrades / data.totalTrades * 100).toFixed(1) : 0;
-        document.getElementById('winRate').innerText = winRate + '%';
-        updatePositionsDisplay(data.positions);
-    }
-
-    function updatePositionsDisplay(positions) {
-        const container = document.getElementById('openPositionsList');
-        if (!positions || positions.length === 0) { container.innerHTML = 'No open positions'; return; }
-        container.innerHTML = positions.map(p => `
-            <div style="background:#1A1F33; border-left:3px solid ${p.type==='buy'?'#22C55E':'#EF4444'}; padding:8px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between;">
-                <div><strong>${p.type.toUpperCase()}</strong> $${p.amount} @ ${p.entryPrice} (${p.leverage}X)<br>
-                <span style="font-size:0.7rem;">Current P&L: <span id="pnl_${p.id}">0.00</span></span></div>
-                <button onclick="closePosition(${p.id})" style="background:#EF4444; padding:4px 8px;">X</button>
-            </div>
-        `).join('');
-        updateAllPnL(positions);
-    }
-
-    function updateAllPnL(positions) {
-        if (!positions || positions.length === 0) return;
-        positions.forEach(p => {
-            const priceDiff = p.type === 'buy' ? (currentPrice - p.entryPrice) : (p.entryPrice - currentPrice);
-            const pnlPercent = priceDiff / p.entryPrice;
-            const pnl = pnlPercent * (p.amount * p.leverage);
-            const pnlElem = document.getElementById(`pnl_${p.id}`);
-            if (pnlElem) {
-                pnlElem.innerText = (pnl >= 0 ? '+' : '') + pnl.toFixed(2);
-                pnlElem.style.color = pnl >= 0 ? '#22C55E' : '#EF4444';
-            }
+    function updatePnL() {
+        let d = data[user];
+        d.positions.forEach(p => {
+            let diff = p.type === 'buy' ? (currentPrice - p.entryPrice) : (p.entryPrice - currentPrice);
+            let pnl = (diff / p.entryPrice) * (p.amount * p.leverage);
+            let span = document.getElementById(`pnl_${p.id}`);
+            if (span) { span.innerText = (pnl >= 0 ? '+' : '') + pnl.toFixed(2); span.style.color = pnl >= 0 ? '#22C55E' : '#EF4444'; }
         });
     }
-
-    let currentPrice = 67000;
     function executeTrade(type, isAuto = false) {
-        const amount = 500;
-        const userData = usersData[currentUser];
-        if (amount > userData.balance) { showNotification('Insufficient balance!', 'error'); return false; }
-        if (userData.positions && userData.positions.length > 0) { showNotification('Close existing position first!', 'warning'); return false; }
-        const leverage = parseInt(document.getElementById('leverageSelect').value);
-        const position = {
-            id: Date.now(), type: type, amount: amount, leverage: leverage,
-            positionSize: amount * leverage, entryPrice: currentPrice, timestamp: new Date().toISOString()
-        };
-        userData.positions.push(position);
-        userData.balance -= amount;
-        userData.totalTrades++;
-        saveUserData(); loadUserData();
-        showNotification(`${type.toUpperCase()} trade: $${amount} @ $${currentPrice.toFixed(2)} (${leverage}X)`, 'success');
-        speakMessage(type === 'buy' ? 'Right time open buy trade' : 'Right time open sell trade');
+        let d = data[user];
+        let amount = 500;
+        if (amount > d.balance) { alert('Insufficient balance'); return false; }
+        if (d.positions.length) { alert('Close existing position first'); return false; }
+        let leverage = parseInt(document.getElementById('timeframe').getAttribute('data-leverage') || '5');
+        let pos = { id: Date.now(), type: type, amount: amount, leverage: leverage, positionSize: amount * leverage, entryPrice: currentPrice, timestamp: new Date() };
+        d.positions.push(pos);
+        d.balance -= amount;
+        d.trades++;
+        save(); loadUI();
+        speak(type === 'buy' ? 'Right time open buy trade' : 'Right time open sell trade');
         return true;
     }
-
-    window.closePosition = function(id) {
-        const userData = usersData[currentUser];
-        const index = userData.positions.findIndex(p => p.id == id);
-        if (index === -1) return;
-        const pos = userData.positions[index];
-        const priceDiff = pos.type === 'buy' ? (currentPrice - pos.entryPrice) : (pos.entryPrice - currentPrice);
-        const pnlPercent = priceDiff / pos.entryPrice;
-        const pnl = pnlPercent * pos.positionSize;
-        userData.balance += pos.amount + pnl;
-        if (pnl > 0) userData.winTrades++;
-        userData.totalProfit += pnl;
-        const historyEntry = { date: new Date().toLocaleString(), type: pos.type, entryPrice: pos.entryPrice, exitPrice: currentPrice, pnl: pnl, pnlPercent: pnlPercent * 100, amount: pos.amount, leverage: pos.leverage };
-        if (!userData.tradeHistory) userData.tradeHistory = [];
-        userData.tradeHistory.unshift(historyEntry);
-        if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
-        userData.positions.splice(index, 1);
-        saveUserData(); loadUserData();
-        showNotification(`Closed ${pos.type.toUpperCase()} | PnL: $${pnl.toFixed(2)}`, pnl >= 0 ? 'success' : 'error');
-        speakMessage('Right time close trade');
+    window.closePos = function(id) {
+        let d = data[user];
+        let idx = d.positions.findIndex(p => p.id == id);
+        if (idx === -1) return;
+        let p = d.positions[idx];
+        let diff = p.type === 'buy' ? (currentPrice - p.entryPrice) : (p.entryPrice - currentPrice);
+        let pnlPercent = diff / p.entryPrice;
+        let pnl = pnlPercent * (p.amount * p.leverage);
+        d.balance += p.amount + pnl;
+        if (pnl > 0) d.wins++;
+        d.profit += pnl;
+        d.history.unshift({ date: new Date().toLocaleString(), type: p.type, entry: p.entryPrice, exit: currentPrice, pnl: pnl, pnlPercent: pnlPercent*100 });
+        if (d.history.length > 50) d.history.pop();
+        d.positions.splice(idx, 1);
+        save(); loadUI();
+        speak('Right time close trade');
     };
-
-    // TP/SL based on timeframe
-    function getTPSLByTimeframe(tf) {
-        switch(tf) {
-            case '1m': return { tp: 0.0025, sl: 0.0012 };
-            case '5m': return { tp: 0.006, sl: 0.003 };
-            case '15m': return { tp: 0.009, sl: 0.0045 };
-            case '1h': return { tp: 0.0135, sl: 0.00675 };
-            case '4h': return { tp: 0.02, sl: 0.01 };
-            case '1D': return { tp: 0.035, sl: 0.0175 };
-            default: return { tp: 0.006, sl: 0.003 };
-        }
-    }
-
-    function autoClosePositions() {
-        const userData = usersData[currentUser];
-        if (!userData.positions || userData.positions.length === 0) return;
-        const timeframe = document.getElementById('timeframeSelect').value;
-        const { tp, sl } = getTPSLByTimeframe(timeframe);
-        let updated = false;
-        for (let i = 0; i < userData.positions.length; i++) {
-            const pos = userData.positions[i];
-            const priceDiff = pos.type === 'buy' ? (currentPrice - pos.entryPrice) : (pos.entryPrice - currentPrice);
-            const pnlPercent = priceDiff / pos.entryPrice;
-            if (pnlPercent >= tp || pnlPercent <= -sl) {
-                const pnl = pnlPercent * pos.positionSize;
-                userData.balance += pos.amount + pnl;
-                if (pnl > 0) userData.winTrades++;
-                userData.totalProfit += pnl;
-                const historyEntry = { date: new Date().toLocaleString(), type: pos.type, entryPrice: pos.entryPrice, exitPrice: currentPrice, pnl: pnl, pnlPercent: pnlPercent * 100, amount: pos.amount, leverage: pos.leverage };
-                if (!userData.tradeHistory) userData.tradeHistory = [];
-                userData.tradeHistory.unshift(historyEntry);
-                if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
-                userData.positions.splice(i, 1);
-                updated = true; i--;
-                showNotification(`Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`, pnl >= 0 ? 'success' : 'info');
-                speakMessage('Right time close trade');
+    function autoClose() {
+        let d = data[user];
+        if (!d.positions.length) return;
+        let tf = document.getElementById('timeframe').value;
+        let tp_sl = { '1m':[0.0025,0.0012], '5m':[0.006,0.003], '15m':[0.009,0.0045], '1h':[0.0135,0.00675], '4h':[0.02,0.01], '1D':[0.035,0.0175] }[tf] || [0.006,0.003];
+        let tp = tp_sl[0], sl = tp_sl[1];
+        for (let i=0; i<d.positions.length; i++) {
+            let p = d.positions[i];
+            let diff = p.type === 'buy' ? (currentPrice - p.entryPrice) : (p.entryPrice - currentPrice);
+            let percent = diff / p.entryPrice;
+            if (percent >= tp || percent <= -sl) {
+                let pnl = percent * (p.amount * p.leverage);
+                d.balance += p.amount + pnl;
+                if (pnl > 0) d.wins++;
+                d.profit += pnl;
+                d.history.unshift({ date: new Date().toLocaleString(), type: p.type, entry: p.entryPrice, exit: currentPrice, pnl: pnl, pnlPercent: percent*100 });
+                if (d.history.length > 50) d.history.pop();
+                d.positions.splice(i,1);
+                i--;
+                save(); loadUI();
+                speak('Right time close trade');
             }
         }
-        if (updated) { saveUserData(); loadUserData(); }
     }
 
-    // ========== শুধুমাত্র recBoxSignal পড়ুন (চার্টের AI সিগন্যাল উপেক্ষা) ==========
-    let currentSignal = null, currentConfidence = 0, currentRSI = 50;
-    function readRecBoxSignal() {
-        const raw = localStorage.getItem('recBoxSignal');
+    // ========== শুধুমাত্র REC_BOX_SIGNAL পড়ুন ==========
+    let currentSignal = null, currentConfidence = 0, currentRSI = 50, currentPrice = 67000;
+    function readSignal() {
+        let raw = localStorage.getItem('REC_BOX_SIGNAL');
         if (raw) {
             try {
-                const data = JSON.parse(raw);
-                if (Date.now() - data.timestamp < 10000) { // 10 সেকেন্ডের মধ্যে
-                    currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
-                    currentConfidence = parseFloat(data.confidence) || 0;
-                    currentRSI = parseFloat(data.rsi) || 50;
-                    if (data.price) currentPrice = data.price;
-                    let statusMsg = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
-                    statusMsg += ` | Signal: ${currentSignal || 'N/A'} | Conf: ${currentConfidence}% | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
-                    document.getElementById('statusDisplay').innerHTML = statusMsg;
-                    document.getElementById('debugInfo').innerHTML = `BUY শর্ত: ${currentSignal === 'BUY'} && conf≥90 = ${currentConfidence >= 90} && RSI<30 = ${currentRSI < 30} | SELL শর্ত: ${currentSignal === 'SELL'} && conf≥90 = ${currentConfidence >= 90} && RSI>70 = ${currentRSI > 70}`;
+                let s = JSON.parse(raw);
+                if (Date.now() - s.timestamp < 10000) {
+                    currentSignal = s.finalSignal ? s.finalSignal.toUpperCase() : null;
+                    currentConfidence = s.confidence || 0;
+                    currentRSI = s.rsi || 50;
+                    if (s.price) currentPrice = s.price;
+                    let statusMsg = (autoOn ? '🟢 ACTIVE' : '⏸️ OFF') + ` | Signal: ${currentSignal || 'N/A'} | Conf: ${currentConfidence}% | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice}`;
+                    document.getElementById('status').innerHTML = statusMsg;
+                    document.getElementById('debug').innerHTML = `BUY condition: ${currentSignal === 'BUY' && currentConfidence >= 90 && currentRSI < 30} | SELL condition: ${currentSignal === 'SELL' && currentConfidence >= 90 && currentRSI > 70}`;
                     return;
                 }
             } catch(e) {}
         }
-        document.getElementById('statusDisplay').innerHTML = (autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF') + ' | ⚠️ recBoxSignal পাওয়া যায়নি (মূল ওয়েবসাইট কি সিগন্যাল দিচ্ছে?)';
+        document.getElementById('status').innerHTML = (autoOn ? '🟢 ACTIVE' : '⏸️ OFF') + ' | ⚠️ No REC_BOX_SIGNAL in localStorage';
     }
+    setInterval(readSignal, 1000);
 
-    setInterval(readRecBoxSignal, 1000); // প্রতি ১ সেকেন্ডে লাইভ আপডেট
-
-    let autoInterval = null, lastTradeTime = 0;
-    const COOLDOWN = 60000;
-    function checkAndTrade() {
-        autoClosePositions();
-        if (!autoEnabled) return;
+    // ========== অটো ট্রেড লুপ ==========
+    let autoOn = false, autoInterval = null, lastTrade = 0;
+    function checkAuto() {
+        autoClose();
+        if (!autoOn) return;
         if (!currentSignal) return;
-        const userData = usersData[currentUser];
-        if (userData.positions.length > 0) return;
-        if (Date.now() - lastTradeTime < COOLDOWN) return;
+        let d = data[user];
+        if (d.positions.length) return;
+        if (Date.now() - lastTrade < 60000) return;
         let action = null;
         if (currentSignal === 'BUY' && currentConfidence >= 90 && currentRSI < 30) action = 'buy';
         else if (currentSignal === 'SELL' && currentConfidence >= 90 && currentRSI > 70) action = 'sell';
-        if (action && executeTrade(action, true)) lastTradeTime = Date.now();
+        if (action && executeTrade(action, true)) lastTrade = Date.now();
     }
+    function startLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = setInterval(checkAuto, 10000); }
+    function stopLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = null; }
 
-    function startAutoLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = setInterval(checkAndTrade, 10000); }
-    function stopAutoLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = null; }
-
-    // UI Controls
-    const startStopBtn = document.getElementById('startStopBtn');
-    const timeframeSelect = document.getElementById('timeframeSelect');
-    const testBuyBtn = document.getElementById('testBuyBtn');
-    const testSellBtn = document.getElementById('testSellBtn');
-    const audioToggleBtn = document.getElementById('audioToggleBtn');
-    const historyBtn = document.getElementById('historyBtn');
-    const resetDataBtn = document.getElementById('resetDataBtn');
-    const leverageSelect = document.getElementById('leverageSelect');
-
-    timeframeSelect.value = selectedTF;
-    if (autoEnabled) { startStopBtn.textContent = '⏸️ Stop Auto Trading'; startStopBtn.style.background = '#EF4444'; startAutoLoop(); }
-    else { startStopBtn.textContent = '🤖 Start Auto Trading'; startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)'; }
-    audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF';
-    audioToggleBtn.style.background = audioEnabled ? '#22C55E' : '#6B7280';
-
+    // UI বাটন
+    let startStopBtn = document.getElementById('startStop');
+    let audioOn = localStorage.getItem('audioOn') === 'true';
+    let audioBtn = document.getElementById('audioToggle');
+    audioBtn.innerText = audioOn ? '🔊 Audio ON' : '🔇 Audio OFF';
+    function speak(msg) { if (audioOn) { let u = new SpeechSynthesisUtterance(msg); u.rate = 0.7; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } }
     startStopBtn.onclick = () => {
-        autoEnabled = !autoEnabled;
-        localStorage.setItem(`autoEnabled_${currentUser}`, autoEnabled);
-        if (autoEnabled) { startStopBtn.textContent = '⏸️ Stop Auto Trading'; startStopBtn.style.background = '#EF4444'; startAutoLoop(); showNotification('Auto trading ENABLED (conf≥90% + RSI)', 'success'); }
-        else { startStopBtn.textContent = '🤖 Start Auto Trading'; startStopBtn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)'; stopAutoLoop(); showNotification('Auto trading DISABLED', 'info'); }
+        autoOn = !autoOn;
+        localStorage.setItem(`auto_${user}`, autoOn);
+        startStopBtn.innerText = autoOn ? '⏸️ Stop' : '🤖 Start';
+        if (autoOn) startLoop(); else stopLoop();
     };
-    timeframeSelect.onchange = () => { selectedTF = timeframeSelect.value; localStorage.setItem(`timeframe_${currentUser}`, selectedTF); showNotification(`Timeframe changed to ${selectedTF}`, 'info'); };
-    testBuyBtn.onclick = () => executeTrade('buy', false);
-    testSellBtn.onclick = () => executeTrade('sell', false);
-    leverageSelect.onchange = () => {};
-    audioToggleBtn.onclick = () => { audioEnabled = !audioEnabled; localStorage.setItem(`audioEnabled_${currentUser}`, audioEnabled); audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF'; audioToggleBtn.style.background = audioEnabled ? '#22C55E' : '#6B7280'; showNotification(audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info'); };
-    resetDataBtn.onclick = () => { if (confirm('Reset all demo data?')) { usersData[currentUser] = { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [], tradeHistory: [] }; saveUserData(); loadUserData(); showNotification('Demo data reset', 'info'); } };
-    function showTradeHistory() {
-        const history = usersData[currentUser].tradeHistory || [];
-        if (history.length === 0) { alert('No trade history'); return; }
-        let modalHtml = `<div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto;">
-            <div style="display:flex; justify-content:space-between;"><h3>Trade History</h3><button id="closeHist" style="background:#EF4444;">Close</button></div>
-            <table style="width:100%;"><thead><tr><th>Date</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>`;
-        history.forEach(t => { const pnlColor = t.pnl >= 0 ? '#22C55E' : '#EF4444'; modalHtml += `<tr><td>${t.date}</td><td style="color:${t.type==='buy'?'#22C55E':'#EF4444'}">${t.type.toUpperCase()}</td><td>$${t.entryPrice.toFixed(2)}</td><td>$${t.exitPrice.toFixed(2)}</td><td style="color:${pnlColor}">$${t.pnl.toFixed(2)} (${t.pnlPercent.toFixed(1)}%)</td></tr>`; });
-        modalHtml += `</tbody></table></div>`;
-        if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        document.getElementById('closeHist').onclick = () => document.getElementById('historyModal').remove();
-    }
-    historyBtn.onclick = showTradeHistory;
-
-    function speakMessage(message) {
-        if (!audioEnabled) return;
-        let count = 0;
-        function speak() { if (!audioEnabled) return; const utterance = new SpeechSynthesisUtterance(message); utterance.rate = 0.7; window.speechSynthesis.cancel(); window.speechSynthesis.speak(utterance); count++; if (count < 5) setTimeout(speak, 1800); }
-        speak();
-    }
-    function showNotification(msg, type) { const notif = document.createElement('div'); notif.className = 'notification'; notif.textContent = msg; notif.style.background = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#3B82F6'; document.body.appendChild(notif); setTimeout(() => notif.remove(), 3000); }
-
-    loadUserData(); readRecBoxSignal();
-    setInterval(() => { const data = usersData[currentUser]; if (data.positions.length > 0) updateAllPnL(data.positions); }, 2000);
+    document.getElementById('testBuy').onclick = () => executeTrade('buy');
+    document.getElementById('testSell').onclick = () => executeTrade('sell');
+    document.getElementById('audioToggle').onclick = () => { audioOn = !audioOn; localStorage.setItem('audioOn', audioOn); audioBtn.innerText = audioOn ? '🔊 Audio ON' : '🔇 Audio OFF'; };
+    document.getElementById('resetBtn').onclick = () => { if(confirm('Reset all demo data?')) { data[user] = { balance:10000, trades:0, wins:0, profit:0, positions:[], history:[] }; save(); loadUI(); } };
+    document.getElementById('historyBtn').onclick = () => {
+        let hist = data[user].history;
+        if (!hist.length) { alert('No history'); return; }
+        let html = '<div style="position:fixed; top:20%; left:20%; background:#0B0F1C; border:2px solid #3B82F6; padding:20px; z-index:9999; max-width:80%; max-height:70%; overflow:auto;"><h3>Trade History</h3><table border=1 cellpadding=5><tr><th>Date</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr>';
+        hist.forEach(h => { html += `<tr><td>${h.date}</td><td>${h.type}</td><td>$${h.entry}</td><td>$${h.exit}</td><td style="color:${h.pnl>=0?'#22C55E':'#EF4444'}">$${h.pnl.toFixed(2)} (${h.pnlPercent.toFixed(1)}%)</td></tr>`; });
+        html += '</table><button id="closeHist" style="margin-top:10px;">Close</button></div>';
+        let div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div);
+        document.getElementById('closeHist').onclick = () => div.remove();
+    };
+    // লিভারেজ select এ onChange
+    document.getElementById('timeframe').addEventListener('change', () => {});
+    // লিভারেজ মান ধরে রাখার জন্য (আপনি চাইলে আলাদা লিভারেজ সিলেক্টর যোগ করতে পারেন, কিন্তু এখানে সহজ রাখলাম)
+    // লিভারেজ fixed 5x
+    // আপডেট P&L প্রতি 2 সেকেন্ডে
+    setInterval(() => { if (data[user].positions.length) updatePnL(); }, 2000);
+    loadUI(); readSignal(); if (localStorage.getItem(`auto_${user}`) === 'true') { autoOn = true; startStopBtn.innerText = '⏸️ Stop'; startLoop(); }
 </script>
 </body>
 </html>
