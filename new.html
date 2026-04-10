@@ -3554,68 +3554,6 @@
     </style>
 </head>
 <body>
-    <!-- ==================== ANTI-DEBUG SCRIPT ==================== -->
-    <div class="anti-debug">
-        <script>
-            // Anti-debugging measures
-            (function() {
-                const devtools = {
-                    isOpen: false,
-                    orientation: undefined
-                };
-                
-                // Detect DevTools
-                const threshold = 160;
-                const checkDevTools = function() {
-                    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-                    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-                    
-                    if (widthThreshold || heightThreshold) {
-                        if (!devtools.isOpen) {
-                            devtools.isOpen = true;
-                            // Self-destruct for copied websites
-                            if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                                document.body.innerHTML = '<div class="self-destruct">⚠️ UNAUTHORIZED COPY DETECTED • SYSTEM TERMINATED ⚠️</div>';
-                                setTimeout(() => {
-                                    window.location.href = 'about:blank';
-                                }, 3000);
-                            }
-                        }
-                    } else {
-                        devtools.isOpen = false;
-                    }
-                };
-                
-                setInterval(checkDevTools, 1000);
-                
-                // Disable right-click and keyboard shortcuts
-                document.addEventListener('contextmenu', e => e.preventDefault());
-                document.addEventListener('keydown', e => {
-                    if (e.key === 'F12' || 
-                        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-                        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-                        (e.ctrlKey && e.key === 'U') ||
-                        (e.ctrlKey && e.key === 'S') ||
-                        (e.ctrlKey && e.key === 'C')) {
-                        e.preventDefault();
-                        showNotification('⚠️ Developer tools are disabled for security', 'warning');
-                    }
-                });
-                
-                // Domain check - only allow specific domains
-                const allowedDomains = ['localhost', '127.0.0.1', 'my.primeaitrade.com'];
-                const currentDomain = window.location.hostname;
-                
-                if (!allowedDomains.includes(currentDomain) && !currentDomain.includes('github.io')) {
-                    // Self-destruct for unauthorized domains
-                    document.body.innerHTML = '<div class="self-destruct">⚠️ UNAUTHORIZED DOMAIN • SYSTEM TERMINATED ⚠️</div>';
-                    setTimeout(() => {
-                        window.location.href = 'about:blank';
-                    }, 3000);
-                }
-            })();
-        </script>
-    </div>
     
     <!-- ==================== LOGIN PAGE ==================== -->
     <div class="login-container" id="loginPage">
