@@ -6161,35 +6161,35 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-// Updated function: shares signal, confidence, RSI, and price to localStorage
-function shareSignalToAutoBot() {
+// রেকমেন্ডেশন বক্সের সিগন্যাল localStorage-এ শেয়ার করুন (শুধু finalConfidence ব্যবহার করে)
+function shareRecommendationSignal() {
     const signalElem = document.getElementById('finalSignal');
     const confidenceElem = document.getElementById('finalConfidence');
     const rsiElem = document.getElementById('rsiValue');
     const priceElem = document.getElementById('currentPriceLarge');
     
-    if (signalElem && rsiElem && confidenceElem) {
-        let confidenceValue = parseFloat(confidenceElem.innerText);
-        // If confidence text includes '%' (e.g., "90%"), remove it
-        if (isNaN(confidenceValue)) {
-            confidenceValue = parseFloat(confidenceElem.innerText.replace('%', ''));
+    if (signalElem && confidenceElem && rsiElem) {
+        let confText = confidenceElem.innerText.trim();
+        let confidence = parseFloat(confText);
+        if (isNaN(confidence)) {
+            confidence = parseFloat(confText.replace('%', ''));
         }
         const signalData = {
             finalSignal: signalElem.innerText.trim(),
-            confidence: isNaN(confidenceValue) ? 0 : confidenceValue,
+            confidence: isNaN(confidence) ? 0 : confidence,
             rsi: parseFloat(rsiElem.innerText) || 50,
-            price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : currentPrice,
+            price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : (typeof currentPrice !== 'undefined' ? currentPrice : 0),
             timestamp: Date.now()
         };
         localStorage.setItem('sharedSignal', JSON.stringify(signalData));
-        console.log('✅ Signal shared (with confidence):', signalData);
+        console.log('✅ Recommendation Box signal shared:', signalData);
     } else {
-        console.warn('Missing elements: finalSignal, finalConfidence, or rsiValue');
+        console.warn('Missing: finalSignal, finalConfidence, or rsiValue');
     }
 }
 
-// Share signal every 3 seconds (or you can call it inside runAIAnalysis)
-setInterval(shareSignalToAutoBot, 3000);
+// প্রতি ৩ সেকেন্ডে শেয়ার করুন (অথবা আপনার AI আপডেট ফাংশনের ভিতরেও কল করতে পারেন)
+setInterval(shareRecommendationSignal, 3000);
     </script>
     
 </body>
