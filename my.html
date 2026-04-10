@@ -6161,94 +6161,56 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-   // ==================== 1. EXECUTE TRADE FUNCTION (FIXED) ====================
+  // ==================== 1. EXECUTE TRADE FUNCTION (AMOUNT = $500, LEVERAGE = 5x) ====================
 window.executeTrade = function(type) {
     console.log('executeTrade called with type:', type);
     let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
     if (!user) {
-        alert('Please login first');
+        console.log('Not logged in');
         return;
     }
     let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
     if (!data || !data[user]) {
-        alert('No trading data found');
+        console.log('No trading data found');
         return;
     }
     let userData = data[user].tradingData;
     if (!userData) {
-        alert('Trading data missing');
+        console.log('Trading data missing');
         return;
     }
     if (userData.positions && userData.positions.length > 0) {
-        alert('Close existing position first');
+        console.log('Close existing position first');
         return;
     }
-    let amount = 20;
+    let margin = 500;          // Your margin
+    let leverage = 5;          // 5x leverage
+    let positionSize = margin * leverage;
     let priceElem = document.getElementById('currentPriceLarge');
     let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
     let position = {
         id: Date.now(),
         symbol: 'BTCUSDT',
         type: type,
-        amount: amount,
-        leverage: 1,
-        positionSize: amount,
+        margin: margin,
+        leverage: leverage,
+        positionSize: positionSize,
         entryPrice: price,
         timestamp: new Date().toLocaleTimeString()
     };
     userData.positions.push(position);
-    userData.balance -= amount;
+    userData.balance -= margin;
     userData.totalTrades = (userData.totalTrades || 0) + 1;
     localStorage.setItem('usersData', JSON.stringify(data));
     if (typeof loadUserTradingData === 'function') loadUserTradingData();
-    alert(`✅ ${type.toUpperCase()} order placed! Amount: $${amount} @ $${price}`);
+    console.log(`✅ ${type.toUpperCase()} order placed! Margin: $${margin} @ ${leverage}X | Position: $${positionSize}`);
+    if (typeof showNotification === 'function') {
+        showNotification(`${type.toUpperCase()} order placed: $${margin} (${leverage}X) @ $${price}`, 'success');
+    }
 };
 
-// ==================== 1. EXECUTE TRADE FUNCTION ====================
-window.executeTrade = function(type) {
-    console.log('executeTrade called with type:', type);
-    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-    if (!user) {
-        alert('Please login first');
-        return;
-    }
-    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-    if (!data || !data[user]) {
-        alert('No trading data found');
-        return;
-    }
-    let userData = data[user].tradingData;
-    if (!userData) {
-        alert('Trading data missing');
-        return;
-    }
-    if (userData.positions && userData.positions.length > 0) {
-        alert('Close existing position first');
-        return;
-    }
-    let amount = 500;
-    let priceElem = document.getElementById('currentPriceLarge');
-    let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
-    let position = {
-        id: Date.now(),
-        symbol: 'BTCUSDT',
-        type: type,
-        amount: amount,
-        leverage: 1,
-        positionSize: amount,
-        entryPrice: price,
-        timestamp: new Date().toLocaleTimeString()
-    };
-    userData.positions.push(position);
-    userData.balance -= amount;
-    userData.totalTrades = (userData.totalTrades || 0) + 1;
-    localStorage.setItem('usersData', JSON.stringify(data));
-    if (typeof loadUserTradingData === 'function') loadUserTradingData();
-    alert(`✅ ${type.toUpperCase()} order placed! Amount: $${amount} @ $${price}`);
-};
-
-// ==================== 2. AUTO CLOSE POSITIONS (TP 1% / SL 0.5%) ====================
-function autoClosePositions() {
+// ==================== 2. AUTO CLOSE POSITIONS (TP = 1.5% / SL = 0.75%) ====================
+window.autoClosePositions = function() {
     let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
     if (!user) return;
     let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
@@ -6260,36 +6222,56 @@ function autoClosePositions() {
     let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
     if (!currentPrice) return;
 
-    const TP_PERCENT = 0.01;   // 1% profit
-    const SL_PERCENT = 0.005;  // 0.5% loss
+    const TP_PERCENT = 0.015;   // 1.5% profit (price move)
+    const SL_PERCENT = 0.0075;  // 0.75% loss (price move)
 
     let updated = false;
     for (let i = 0; i < userData.positions.length; i++) {
         let pos = userData.positions[i];
+        let leverage = pos.leverage || 1;
+        let positionSize = pos.positionSize || (pos.margin * leverage);
         let pnlPercent = (pos.type === 'buy') 
             ? (currentPrice - pos.entryPrice) / pos.entryPrice 
             : (pos.entryPrice - currentPrice) / pos.entryPrice;
+        let pnl = pnlPercent * positionSize;
         
         if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
-            // Close position
-            let pnl = pnlPercent * pos.positionSize;
-            userData.balance += pos.amount + pnl;
+            // Create history entry
+            let historyEntry = {
+                date: new Date().toLocaleString(),
+                timestamp: new Date().toISOString(),
+                type: pos.type,
+                entryPrice: pos.entryPrice,
+                exitPrice: currentPrice,
+                pnl: pnl,
+                pnlPercent: pnlPercent * 100,
+                positionSize: positionSize,
+                margin: pos.margin || pos.amount,
+                leverage: leverage
+            };
+            // Update balance and stats
+            userData.balance += (pos.margin || pos.amount) + pnl;
             userData.totalTrades = (userData.totalTrades || 0) + 1;
             if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
             userData.totalProfit = (userData.totalProfit || 0) + pnl;
             userData.positions.splice(i, 1);
             updated = true;
             i--;
-            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`;
+            // Save to history
+            if (!userData.tradeHistory) userData.tradeHistory = [];
+            userData.tradeHistory.unshift(historyEntry);
+            if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
+            
+            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)} (${leverage}X)`;
             if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
-            else alert(msg);
+            else console.log(msg);
         }
     }
     if (updated) {
         localStorage.setItem('usersData', JSON.stringify(data));
         if (typeof loadUserTradingData === 'function') loadUserTradingData();
     }
-}
+};
 
 // ==================== 3. AUTO TRADING BOT (USES RECOMMENDATION SIGNAL + RSI) ====================
 (function() {
@@ -6335,7 +6317,7 @@ function autoClosePositions() {
     }
 
     function checkAndTrade() {
-        // First, auto-close any positions that hit TP/SL
+        // Auto-close any positions that hit TP/SL
         autoClosePositions();
 
         if (!enabled) {
@@ -6384,8 +6366,6 @@ function autoClosePositions() {
             updateStatusDisplay(`✅ ${action.toUpperCase()} trade executed!`);
             if (typeof showNotification === 'function') {
                 showNotification(`🤖 AUTO ${action.toUpperCase()} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
-            } else {
-                alert(`Auto ${action.toUpperCase()} placed!`);
             }
         } else {
             updateStatusDisplay('❌ executeTrade function missing');
@@ -6539,15 +6519,12 @@ function autoClosePositions() {
         }
     });
 })();
-        // ==================== TRADE HISTORY FEATURE (PERSISTENT) ====================
+
+// ==================== 4. TRADE HISTORY FEATURE (PERSISTENT) ====================
 (function() {
-    // Add "View Trade History" button next to auto trading controls
     function addHistoryButton() {
         let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-        if (!footer) {
-            setTimeout(addHistoryButton, 500);
-            return;
-        }
+        if (!footer) { setTimeout(addHistoryButton, 500); return; }
         if (document.getElementById('historyBtn')) return;
 
         let btn = document.createElement('button');
@@ -6563,30 +6540,17 @@ function autoClosePositions() {
         btn.onclick = showTradeHistory;
         
         let existingPanel = document.getElementById('autoPanel');
-        if (existingPanel) {
-            existingPanel.appendChild(btn);
-        } else {
-            footer.appendChild(btn);
-        }
+        if (existingPanel) existingPanel.appendChild(btn);
+        else footer.appendChild(btn);
     }
 
-    // Show trade history in a modal popup
     function showTradeHistory() {
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-        if (!user) {
-            alert('Please login first');
-            return;
-        }
+        if (!user) { alert('Please login first'); return; }
         let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-        if (!data || !data[user]) {
-            alert('No trading data');
-            return;
-        }
+        if (!data || !data[user]) { alert('No trading data'); return; }
         let history = data[user].tradingData?.tradeHistory || [];
-        if (history.length === 0) {
-            alert('No trade history yet');
-            return;
-        }
+        if (history.length === 0) { alert('No trade history yet'); return; }
 
         let modalHtml = `
         <div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto; box-shadow:0 0 50px rgba(0,0,0,0.8);">
@@ -6595,103 +6559,30 @@ function autoClosePositions() {
                 <button id="closeModalBtn" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px; cursor:pointer;">Close</button>
             </div>
             <table style="width:100%; border-collapse:collapse; color:#E5E7EB;">
-                <thead>
-                    <tr style="background:#1A1F33;">
-                        <th style="padding:8px; text-align:left;">Date & Time</th>
-                        <th style="padding:8px; text-align:left;">Type</th>
-                        <th style="padding:8px; text-align:left;">Entry</th>
-                        <th style="padding:8px; text-align:left;">Exit</th>
-                        <th style="padding:8px; text-align:left;">P&L</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
+                <thead><tr style="background:#1A1F33;">
+                    <th style="padding:8px; text-align:left;">Date & Time</th>
+                    <th style="padding:8px; text-align:left;">Type</th>
+                    <th style="padding:8px; text-align:left;">Entry</th>
+                    <th style="padding:8px; text-align:left;">Exit</th>
+                    <th style="padding:8px; text-align:left;">P&L</th>
+                </td></thead><tbody>`;
         history.forEach(trade => {
             let pnlColor = trade.pnl >= 0 ? '#22C55E' : '#EF4444';
-            modalHtml += `
-                <tr style="border-bottom:1px solid #2A3045;">
-                    <td style="padding:8px;">${trade.date || trade.timestamp || ''}</td>
-                    <td style="padding:8px; text-transform:uppercase; color:${trade.type === 'buy' ? '#22C55E' : '#EF4444'}">${trade.type}</td>
-                    <td style="padding:8px;">$${trade.entryPrice?.toFixed(2)}</td>
-                    <td style="padding:8px;">$${trade.exitPrice?.toFixed(2)}</td>
-                    <td style="padding:8px; color:${pnlColor};">$${trade.pnl?.toFixed(2)} (${(trade.pnlPercent || 0).toFixed(1)}%)</td>
-                </tr>
-            `;
+            modalHtml += `<tr style="border-bottom:1px solid #2A3045;">
+                <td style="padding:8px;">${trade.date || trade.timestamp || ''}</td>
+                <td style="padding:8px; text-transform:uppercase; color:${trade.type === 'buy' ? '#22C55E' : '#EF4444'}">${trade.type}</td>
+                <td style="padding:8px;">$${trade.entryPrice?.toFixed(2)}</td>
+                <td style="padding:8px;">$${trade.exitPrice?.toFixed(2)}</td>
+                <td style="padding:8px; color:${pnlColor};">$${trade.pnl?.toFixed(2)} (${(trade.pnlPercent || 0).toFixed(1)}%)</td>
+            </tr>`;
         });
-        modalHtml += `
-                </tbody>
-            </table>
-        </div>`;
-
+        modalHtml += `</tbody><table></div>`;
         if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         document.getElementById('closeModalBtn').onclick = () => document.getElementById('historyModal').remove();
     }
 
-    // Override autoClosePositions to save history when TP/SL closes a trade
-    // (This replaces your existing autoClosePositions function with one that also saves history)
-    window.autoClosePositions = function() {
-        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-        if (!user) return;
-        let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-        if (!data || !data[user]) return;
-        let userData = data[user].tradingData;
-        if (!userData || !userData.positions || userData.positions.length === 0) return;
-
-        let priceElem = document.getElementById('currentPriceLarge');
-        let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
-        if (!currentPrice) return;
-
-        const TP_PERCENT = 0.01;   // 1% profit
-        const SL_PERCENT = 0.005;  // 0.5% loss
-
-        let updated = false;
-        for (let i = 0; i < userData.positions.length; i++) {
-            let pos = userData.positions[i];
-            let pnlPercent = (pos.type === 'buy') 
-                ? (currentPrice - pos.entryPrice) / pos.entryPrice 
-                : (pos.entryPrice - currentPrice) / pos.entryPrice;
-            
-            if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
-                // Create history entry
-                let historyEntry = {
-                    date: new Date().toLocaleString(),
-                    timestamp: new Date().toISOString(),
-                    type: pos.type,
-                    entryPrice: pos.entryPrice,
-                    exitPrice: currentPrice,
-                    pnl: pnlPercent * pos.positionSize,
-                    pnlPercent: pnlPercent * 100,
-                    positionSize: pos.positionSize,
-                    amount: pos.amount
-                };
-                let pnl = historyEntry.pnl;
-                // Update balance and stats
-                userData.balance += pos.amount + pnl;
-                userData.totalTrades = (userData.totalTrades || 0) + 1;
-                if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
-                userData.totalProfit = (userData.totalProfit || 0) + pnl;
-                // Remove position
-                userData.positions.splice(i, 1);
-                updated = true;
-                i--;
-                // Save to history
-                if (!userData.tradeHistory) userData.tradeHistory = [];
-                userData.tradeHistory.unshift(historyEntry);
-                if (userData.tradeHistory.length > 50) userData.tradeHistory.pop(); // keep last 50
-                
-                let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`;
-                if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
-                else alert(msg);
-            }
-        }
-        if (updated) {
-            localStorage.setItem('usersData', JSON.stringify(data));
-            if (typeof loadUserTradingData === 'function') loadUserTradingData();
-        }
-    };
-
-    // Also override manual close function (if it exists) to save history
+    // Override manual close function to save history
     if (typeof window.closePosition === 'function') {
         const originalClose = window.closePosition;
         window.closePosition = function(id) {
@@ -6706,10 +6597,12 @@ function autoClosePositions() {
             let pos = userData.positions[posIndex];
             let priceElem = document.getElementById('currentPriceLarge');
             let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : pos.entryPrice;
+            let leverage = pos.leverage || 1;
+            let positionSize = pos.positionSize || (pos.margin * leverage);
             let pnlPercent = (pos.type === 'buy') 
                 ? (currentPrice - pos.entryPrice) / pos.entryPrice 
                 : (pos.entryPrice - currentPrice) / pos.entryPrice;
-            let pnl = pnlPercent * pos.positionSize;
+            let pnl = pnlPercent * positionSize;
             let historyEntry = {
                 date: new Date().toLocaleString(),
                 timestamp: new Date().toISOString(),
@@ -6718,12 +6611,11 @@ function autoClosePositions() {
                 exitPrice: currentPrice,
                 pnl: pnl,
                 pnlPercent: pnlPercent * 100,
-                positionSize: pos.positionSize,
-                amount: pos.amount
+                positionSize: positionSize,
+                margin: pos.margin || pos.amount,
+                leverage: leverage
             };
-            // Call original close function to update balance, etc.
             originalClose(id);
-            // After original close, add to history (use timeout to ensure data is updated)
             setTimeout(() => {
                 let newData = (typeof usersData !== 'undefined') ? usersData : window.usersData;
                 let newUserData = newData[user].tradingData;
@@ -6736,15 +6628,13 @@ function autoClosePositions() {
         };
     }
 
-    // Initialize button on page load
     window.addEventListener('load', addHistoryButton);
 })();
-// ==================== AUDIO ALERT FEATURE (UPDATED MESSAGES) ====================
+
+// ==================== 5. AUDIO ALERT FEATURE (UPDATED MESSAGES) ====================
 (function() {
-    // Load saved state
     let audioEnabled = localStorage.getItem('audioAlertsEnabled') === 'true';
     
-    // Function to speak a message 5 times slowly
     function speakMessage(message) {
         if (!audioEnabled) return;
         let count = 0;
@@ -6752,32 +6642,27 @@ function autoClosePositions() {
             if (!audioEnabled) return;
             let utterance = new SpeechSynthesisUtterance(message);
             utterance.lang = 'en-US';
-            utterance.rate = 0.7;   // slower rate
+            utterance.rate = 0.7;
             utterance.pitch = 1;
-            window.speechSynthesis.cancel(); // stop any ongoing speech
+            window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
             count++;
-            if (count < 5) {
-                setTimeout(speak, 1800); // wait 1.8 seconds between repeats
-            }
+            if (count < 5) setTimeout(speak, 1800);
         }
         speak();
     }
     
-    // Hook into BUY/SELL trade execution (window.executeTrade)
+    // Hook into executeTrade
     if (typeof window.executeTrade === 'function') {
         const originalExecuteTrade = window.executeTrade;
         window.executeTrade = function(type) {
             originalExecuteTrade(type);
-            if (type === 'buy') {
-                speakMessage('Right time open buy trade');
-            } else if (type === 'sell') {
-                speakMessage('Right time open sell trade');
-            }
+            if (type === 'buy') speakMessage('Right time open buy trade');
+            else if (type === 'sell') speakMessage('Right time open sell trade');
         };
     }
     
-    // Hook into manual trade close (if closePosition function exists)
+    // Hook into manual close
     if (typeof window.closePosition === 'function') {
         const originalClosePosition = window.closePosition;
         window.closePosition = function(id) {
@@ -6786,7 +6671,7 @@ function autoClosePositions() {
         };
     }
     
-    // Hook into auto close (autoClosePositions)
+    // Hook into auto close
     if (typeof window.autoClosePositions === 'function') {
         const originalAutoClose = window.autoClosePositions;
         window.autoClosePositions = function() {
@@ -6801,19 +6686,13 @@ function autoClosePositions() {
                 let userData = window.usersData[window.currentUser]?.tradingData;
                 if (userData && userData.positions) afterCloseCount = userData.positions.length;
             }
-            if (beforeCloseCount > afterCloseCount) {
-                speakMessage('Right time close trade');
-            }
+            if (beforeCloseCount > afterCloseCount) speakMessage('Right time close trade');
         };
     }
     
-    // Create UI toggle button (adds to the auto trading panel or footer)
     function addAudioToggleButton() {
         let footer = document.querySelector('.ultimate-rec-footer .trade-actions');
-        if (!footer) {
-            setTimeout(addAudioToggleButton, 500);
-            return;
-        }
+        if (!footer) { setTimeout(addAudioToggleButton, 500); return; }
         if (document.getElementById('audioToggleBtn')) return;
         
         let btn = document.createElement('button');
@@ -6837,14 +6716,10 @@ function autoClosePositions() {
         };
         
         let existingPanel = document.getElementById('autoPanel');
-        if (existingPanel) {
-            existingPanel.appendChild(btn);
-        } else {
-            footer.appendChild(btn);
-        }
+        if (existingPanel) existingPanel.appendChild(btn);
+        else footer.appendChild(btn);
     }
     
-    // Initialize button on page load
     window.addEventListener('load', addAudioToggleButton);
 })();
     </script>
