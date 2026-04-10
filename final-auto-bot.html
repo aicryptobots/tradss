@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto Bot - Recommendation Box Only (No Chart AI)</title>
+    <title>Final Auto Bot - Recommendation Box Only</title>
     <style>
         body { font-family: Arial; background: #03050A; color: white; padding: 20px; }
         .card { background: #0B0F1C; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
@@ -17,8 +17,8 @@
 <body>
 <div style="max-width: 700px; margin: auto;">
     <div class="card">
-        <h2>🤖 অটো ট্রেডিং বট (শুধু রেকমেন্ডেশন বক্স)</h2>
-        <p>এই বট <strong>শুধুমাত্র <code>REC_BOX_SIGNAL</code></strong> কী থেকে ডাটা পড়ে – যা আপনার রেকমেন্ডেশন বক্সের সিগন্যাল ও কনফিডেন্স (যেমন 90%)। চার্টের AI সিগন্যাল (99.7%) সম্পূর্ণ উপেক্ষিত।</p>
+        <h2>✅ Auto Trading Bot (Recommendation Box Only)</h2>
+        <p>Uses localStorage key <code>REC_BOX_ONLY</code> – reads only your recommendation box signal, confidence, and RSI. Chart AI signal is ignored.</p>
         <div>
             <select id="tf">
                 <option value="1m">1m</option><option value="5m">5m</option>
@@ -36,14 +36,14 @@
         <div class="debug" id="debug"></div>
     </div>
     <div class="card">
-        <h3>💰 ডেমো অ্যাকাউন্ট</h3>
+        <h3>💰 Demo Account</h3>
         <div>Balance: <span id="balance">$10,000</span> | P&L: <span id="pnl">$0</span> | Trades: <span id="trades">0</span> | Win: <span id="winRate">0%</span></div>
         <h4>Open Positions</h4>
         <div id="positions"></div>
     </div>
 </div>
 <script>
-    // ========== ইউজার ডাটা (persistent) ==========
+    // ========== Persistent user data ==========
     let user = 'default';
     let store = JSON.parse(localStorage.getItem('autoBotStore')) || {};
     if (!store[user]) store[user] = { balance: 10000, trades: 0, wins: 0, profit: 0, positions: [], history: [] };
@@ -126,10 +126,10 @@
         }
     }
 
-    // ========== শুধুমাত্র REC_BOX_SIGNAL পড়ুন (চার্টের AI সিগন্যাল উপেক্ষা) ==========
+    // ========== Read ONLY from REC_BOX_ONLY (recommendation box) ==========
     let currentSignal = null, currentConfidence = 0, currentRSI = 50;
     function readRecBoxSignal() {
-        let raw = localStorage.getItem('REC_BOX_SIGNAL');
+        let raw = localStorage.getItem('REC_BOX_ONLY');
         if (raw) {
             try {
                 let data = JSON.parse(raw);
@@ -140,17 +140,17 @@
                     if (data.price) currentPrice = data.price;
                     let statusText = (autoOn ? '🟢 ACTIVE' : '⏸️ OFF') + ` | Signal: ${currentSignal || 'N/A'} | Conf: ${currentConfidence}% | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice}`;
                     document.getElementById('status').innerHTML = statusText;
-                    document.getElementById('debug').innerHTML = `BUY শর্ত: ${currentSignal === 'BUY' && currentConfidence >= 90 && currentRSI < 30} | SELL শর্ত: ${currentSignal === 'SELL' && currentConfidence >= 90 && currentRSI > 70}`;
+                    document.getElementById('debug').innerHTML = `BUY condition: ${currentSignal === 'BUY' && currentConfidence >= 90 && currentRSI < 30} | SELL condition: ${currentSignal === 'SELL' && currentConfidence >= 90 && currentRSI > 70}`;
                     return;
                 }
             } catch(e) {}
         }
-        document.getElementById('status').innerHTML = (autoOn ? '🟢 ACTIVE' : '⏸️ OFF') + ' | ⚠️ REC_BOX_SIGNAL পাওয়া যায়নি (মূল ওয়েবসাইট থেকে ডাটা আসছে না)';
-        document.getElementById('debug').innerHTML = 'মূল ওয়েবসাইটে ধাপ ১-এর কোড যোগ করেছেন? কনসোলে localStorage.getItem("REC_BOX_SIGNAL") চেক করুন।';
+        document.getElementById('status').innerHTML = (autoOn ? '🟢 ACTIVE' : '⏸️ OFF') + ' | ⚠️ REC_BOX_ONLY not found';
+        document.getElementById('debug').innerHTML = 'Make sure your main website writes to REC_BOX_ONLY. Check console.';
     }
     setInterval(readRecBoxSignal, 1000);
 
-    // ========== অটো ট্রেড লুপ ==========
+    // ========== Auto trading loop ==========
     let autoOn = false, autoInterval = null, lastTrade = 0;
     function checkAuto() {
         autoCloseByTPSL();
@@ -167,7 +167,7 @@
     function startLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = setInterval(checkAuto, 10000); }
     function stopLoop() { if (autoInterval) clearInterval(autoInterval); autoInterval = null; }
 
-    // UI কন্ট্রোল
+    // UI Controls
     let startStopBtn = document.getElementById('startStop');
     let audioOn = localStorage.getItem('audioOn') === 'true';
     let audioBtn = document.getElementById('audioToggle');
@@ -188,7 +188,7 @@
         if (!hist.length) { alert('No trade history'); return; }
         let html = '<div style="position:fixed; top:20%; left:20%; background:#0B0F1C; border:2px solid #3B82F6; padding:20px; z-index:9999; max-width:80%; max-height:70%; overflow:auto;"><h3>Trade History</h3><table border=1 cellpadding=5><tr><th>Date</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr>';
         hist.forEach(h => { html += `<tr><td>${h.date}</td><td>${h.type}</td><td>$${h.entry}</td><td>$${h.exit}</td><td style="color:${h.pnl>=0?'#22C55E':'#EF4444'}">$${h.pnl.toFixed(2)} (${h.percent.toFixed(1)}%)</td></tr>`; });
-        html += '<table><button id="closeHist" style="margin-top:10px;">Close</button></div>';
+        html += '</table><button id="closeHist" style="margin-top:10px;">Close</button></div>';
         let div = document.createElement('div'); div.innerHTML = html; document.body.appendChild(div);
         document.getElementById('closeHist').onclick = () => div.remove();
     };
