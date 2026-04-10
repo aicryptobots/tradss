@@ -6161,8 +6161,8 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-// রেকমেন্ডেশন বক্সের সিগন্যাল localStorage-এ শেয়ার করুন (শুধু finalConfidence ব্যবহার করে)
-function shareRecommendationSignal() {
+// Share ONLY the Recommendation Box signal using a unique key 'recBoxSignal'
+function shareRecBoxSignal() {
     const signalElem = document.getElementById('finalSignal');
     const confidenceElem = document.getElementById('finalConfidence');
     const rsiElem = document.getElementById('rsiValue');
@@ -6181,15 +6181,16 @@ function shareRecommendationSignal() {
             price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : (typeof currentPrice !== 'undefined' ? currentPrice : 0),
             timestamp: Date.now()
         };
-        localStorage.setItem('sharedSignal', JSON.stringify(signalData));
-        console.log('✅ Recommendation Box signal shared:', signalData);
+        // Use a different key to avoid conflict with chart's AI signal
+        localStorage.setItem('recBoxSignal', JSON.stringify(signalData));
+        console.log('✅ Recommendation Box signal saved to recBoxSignal:', signalData);
     } else {
-        console.warn('Missing: finalSignal, finalConfidence, or rsiValue');
+        console.warn('Missing elements: finalSignal, finalConfidence, or rsiValue');
     }
 }
 
-// প্রতি ৩ সেকেন্ডে শেয়ার করুন (অথবা আপনার AI আপডেট ফাংশনের ভিতরেও কল করতে পারেন)
-setInterval(shareRecommendationSignal, 3000);
+// Share every 3 seconds
+setInterval(shareRecBoxSignal, 3000);
     </script>
     
 </body>
