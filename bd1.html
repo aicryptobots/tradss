@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - With Confidence 90%</title>
+    <title>Auto Trading Bot - Reads Confidence from localStorage</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -29,8 +29,8 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Confidence ≥ 90% + RSI + Signal)</h3>
-        <p style="color:#94A3B8; margin-bottom:15px;">Reads <strong>finalSignal</strong>, <strong>confidence</strong>, and <strong>RSI</strong> from main website via <code>localStorage</code> (key: <code>sharedSignal</code>).</p>
+        <h3>🤖 Auto Trading Bot (Confidence + Signal + RSI)</h3>
+        <p style="color:#94A3B8; margin-bottom:15px;">Reads <code>sharedSignal</code> from localStorage: <strong>finalSignal</strong>, <strong>confidence</strong>, <strong>rsi</strong>, <strong>price</strong>. Auto trade triggers when confidence ≥ 90%, signal matches, and RSI conditions are met.</p>
         <div class="flex-row">
             <select id="timeframeSelect">
                 <option value="1m">1m</option>
@@ -278,7 +278,7 @@
         if (signalData) {
             try {
                 const data = JSON.parse(signalData);
-                if (Date.now() - data.timestamp < 10000) { // accept only recent signals
+                if (Date.now() - data.timestamp < 10000) { // accept only recent signals (10 seconds)
                     currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
                     currentConfidence = parseFloat(data.confidence) || 0;
                     currentRSI = parseFloat(data.rsi) || 50;
@@ -300,7 +300,7 @@
 
     setInterval(readSignalFromLocalStorage, 2000);
 
-    // ==================== AUTO TRADING LOOP (now uses confidence ≥ 90%) ====================
+    // ==================== AUTO TRADING LOOP (confidence ≥ 90%) ====================
     let autoInterval = null;
     let lastTradeTime = 0;
     const COOLDOWN = 60000;
