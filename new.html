@@ -6188,474 +6188,7 @@
             }
         }
         
-        // ==================== TRADING FUNCTIONS ====================
-        function setLeverage(value) {
-            currentLeverage = value;
-            document.getElementById('leverageValue').textContent = value + 'X';
-            
-            document.querySelectorAll('.margin-level').forEach(el => {
-                el.classList.remove('active');
-                if (el.textContent === value + 'X') {
-                    el.classList.add('active');
-                }
-            });
-            
-            updateMarginInfo();
-        }
-        
-        function updateMarginInfo() {
-            const amount = parseFloat(document.getElementById('tradeAmount').value) || 100;
-            const positionSize = amount * currentLeverage;
-            
-            document.getElementById('positionSize').textContent = '$' + positionSize.toFixed(2);
-            document.getElementById('marginRequired').textContent = '$' + amount.toFixed(2);
-        }
-        
-        function executeTrade(type) {
-            if (!currentUser || !usersData[currentUser]) {
-                showNotification('Please login first!', 'error');
-                return;
-            }
-            
-            const amount = parseFloat(document.getElementById('tradeAmount').value) || 100;
-            const userData = usersData[currentUser].tradingData;
-            
-            if (amount > userData.balance) {
-                showNotification('Insufficient balance!', 'error');
-                return;
-            }
-            
-            const priceDisplay = currentCoin.symbol === 'PENGU' || currentCoin.symbol === 'FARTCOIN' || currentCoin.symbol === 'BRETT' ? 4 : 2;
-            
-            const position = {
-                id: Date.now(),
-                symbol: currentSymbol,
-                type: type,
-                amount: amount,
-                leverage: currentLeverage,
-                positionSize: amount * currentLeverage,
-                entryPrice: currentPrice,
-                timestamp: DateTime.now().toFormat('HH:mm:ss')
-            };
-            
-            userData.positions.push(position);
-            userData.balance -= amount;
-            
-            saveUserTradingData();
-            loadUserTradingData();
-            
-            showNotification(`${type.toUpperCase()} Entry: $${amount} @ $${currentPrice.toFixed(priceDisplay)}`, 'success');
-        }
-        
-        function closePosition(id) {
-            if (!currentUser || !usersData[currentUser]) return;
-            
-            const userData = usersData[currentUser].tradingData;
-            const position = userData.positions.find(p => p.id === id);
-            
-            if (!position) return;
-            
-            const priceDiff = position.type === 'buy' 
-                ? (currentPrice - position.entryPrice)
-                : (position.entryPrice - currentPrice);
-            
-            const pnl = (priceDiff / position.entryPrice) * position.positionSize;
-            
-            userData.balance += position.amount + pnl;
-            userData.totalTrades++;
-            if (pnl > 0) userData.winTrades++;
-            userData.totalProfit += pnl;
-            
-            userData.positions = userData.positions.filter(p => p.id !== id);
-            
-            saveUserTradingData();
-            loadUserTradingData();
-            
-            showNotification(`Closed: $${pnl.toFixed(2)} P&L`, pnl >= 0 ? 'success' : 'error');
-        }
-        
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 3000);
-        }
-        
-        function toggleMenu() {
-            document.getElementById('navMenu').classList.toggle('mobile-active');
-        }
-        
-        document.querySelectorAll('.timeframe-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                fetchData();
-            });
-        });
-        
-        document.getElementById('leverageSlider').addEventListener('input', function(e) {
-            setLeverage(parseInt(e.target.value));
-        });
-        
-        document.getElementById('tradeAmount').addEventListener('input', updateMarginInfo);
-        
-        // Initialize on page load
-        window.onload = async function() {
-            // Initialize with sample data if empty
-            if (Object.keys(usersData).length === 0) {
-                const today = DateTime.now().toISODate();
-                const exp30 = DateTime.now().plus({ days: 30 }).toISODate();
-                const exp365 = DateTime.now().plus({ days: 365 }).toISODate();
-                
-                usersData['438213'] = {
-                    expiry: exp30,
-                    createdAt: today,
-                    days: 30,
-                    tradingData: { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [] }
-                };
-                
-                usersData['253346'] = {
-                    expiry: exp30,
-                    createdAt: today,
-                    days: 30,
-                    tradingData: { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [] }
-                };
-                
-                usersData['272485'] = {
-                    expiry: exp365,
-                    createdAt: today,
-                    days: 365,
-                    tradingData: { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [] }
-                };
-                
-                localStorage.setItem('usersData', JSON.stringify(usersData));
-            }
-            
-            if (!checkAdminAccess()) {
-                if (!await checkUserSession()) {
-                    document.getElementById('loginPage').style.display = 'flex';
-                    document.getElementById('adminPanel').style.display = 'none';
-                    document.getElementById('mainWebsite').style.display = 'none';
-                }
-            }
-            
-            loadCoins();
-            setTimeout(() => {
-                initChart();
-            }, 500);
-            updateMarginInfo();
-            document.getElementById('alertToggle').classList.add('active');
-        };
-        
-                // ==================== FIREBASE DATA SYNC FUNCTIONS ====================
-        
-        // Firebase এ ডাটা সেভ করুন
-        async function saveToFirebase() {
-            if (!window.db) {
-                console.log("Firebase not ready, using localStorage");
-                return false;
-            }
-            
-            try {
-                const allData = {
-                    usersData: usersData,
-                    activeSessions: activeSessions,
-                    lastUpdated: new Date().toISOString()
-                };
-                
-                await window.db.ref('/').set(allData);
-                console.log("Data saved to Firebase successfully!");
-                return true;
-            } catch (error) {
-                console.error("Firebase save error:", error);
-                return false;
-            }
-        }
-        
-        // Firebase থেকে ডাটা লোড করুন
-        async function loadFromFirebase() {
-            if (!window.db) {
-                console.log("Firebase not ready, using localStorage");
-                return false;
-            }
-            
-            try {
-                const snapshot = await window.db.ref('/').once('value');
-                const data = snapshot.val();
-                
-                if (data) {
-                    usersData = data.usersData || {};
-                    activeSessions = data.activeSessions || {};
-                    
-                    localStorage.setItem('usersData', JSON.stringify(usersData));
-                    localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-                    
-                    console.log("Data loaded from Firebase successfully!");
-                    return true;
-                }
-            } catch (error) {
-                console.error("Firebase load error:", error);
-            }
-            return false;
-        }
-        
-        // Real-time listener (সব ডিভাইসে সাথে সাথে আপডেট হবে)
-        function listenToFirebaseChanges() {
-            if (!window.db) return;
-            
-            window.db.ref('/').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    const oldUsersData = usersData;
-                    const oldActiveSessions = activeSessions;
-                    
-                    usersData = data.usersData || {};
-                    activeSessions = data.activeSessions || {};
-                    
-                    if (JSON.stringify(oldUsersData) !== JSON.stringify(usersData) ||
-                        JSON.stringify(oldActiveSessions) !== JSON.stringify(activeSessions)) {
-                        
-                        if (document.getElementById('adminPanel').style.display === 'block') {
-                            loadUsersList();
-                        }
-                        
-                        if (currentUser) {
-                            checkUserSession();
-                            updateUserExpiryInfo(currentUser);
-                            loadUserTradingData();
-                        }
-                        
-                        showNotification('Data synced from cloud!', 'info');
-                    }
-                }
-            });
-        }
-        
-        // ==================== WRAP EXISTING FUNCTIONS ====================
-        
-        // generateNewCode ফাংশন র‍্যাপ করুন
-        const originalGenerateNewCode = generateNewCode;
-        generateNewCode = function() {
-            originalGenerateNewCode();
-            saveToFirebase();
-        };
-        
-        // removeUser ফাংশন র‍্যাপ করুন
-        const originalRemoveUser = removeUser;
-        removeUser = function() {
-            originalRemoveUser();
-            saveToFirebase();
-        };
-        
-        // loginWithCode ফাংশন র‍্যাপ করুন
-        const originalLoginWithCode = loginWithCode;
-        loginWithCode = async function() {
-            await originalLoginWithCode();
-            saveToFirebase();
-        };
-        
-        // executeTrade ফাংশন র‍্যাপ করুন
-        const originalExecuteTrade = executeTrade;
-        executeTrade = function(type) {
-            originalExecuteTrade(type);
-            saveToFirebase();
-        };
-        
-        // closePosition ফাংশন র‍্যাপ করুন
-        const originalClosePosition = closePosition;
-        closePosition = function(id) {
-            originalClosePosition(id);
-            saveToFirebase();
-        };
-        
-        // resetUserData ফাংশন র‍্যাপ করুন
-        const originalResetUserData = resetUserData;
-        resetUserData = function(code) {
-            originalResetUserData(code);
-            saveToFirebase();
-        };
-        
-        // editUserExpiry ফাংশন র‍্যাপ করুন
-        const originalEditUserExpiry = editUserExpiry;
-        editUserExpiry = function(code) {
-            originalEditUserExpiry(code);
-            saveToFirebase();
-        };
-        
-        // removeUserByCode ফাংশন র‍্যাপ করুন
-        const originalRemoveUserByCode = removeUserByCode;
-        removeUserByCode = function(code) {
-            originalRemoveUserByCode(code);
-            saveToFirebase();
-        };
-        
-        // ==================== UPDATE WINDOW.ONLOAD ====================
-        
-        const originalOnload = window.onload;
-        window.onload = async function() {
-            const loaded = await loadFromFirebase();
-            
-            if (!loaded && Object.keys(usersData).length === 0) {
-                const today = DateTime.now().toISODate();
-                const exp30 = DateTime.now().plus({ days: 30 }).toISODate();
-                const exp365 = DateTime.now().plus({ days: 365 }).toISODate();
-                
-                usersData['438213'] = {
-                    expiry: exp30,
-                    createdAt: today,
-                    days: 30,
-                    tradingData: { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [] }
-                };
-                
-                usersData['253346'] = {
-                    expiry: exp30,
-                    createdAt: today,
-                    days: 30,
-                    tradingData: { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [] }
-                };
-                
-                usersData['272485'] = {
-                    expiry: exp365,
-                    createdAt: today,
-                    days: 365,
-                    tradingData: { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [] }
-                };
-                
-                localStorage.setItem('usersData', JSON.stringify(usersData));
-                saveToFirebase();
-            }
-            
-            listenToFirebaseChanges();
-            
-            if (originalOnload) {
-                originalOnload();
-            }
-        };
-        // ==================== 1. EXECUTE TRADE (MARGIN $500, LEVERAGE 5x, NO POPUP) ====================
-window.executeTrade = function(type) {
-    console.log('executeTrade called with type:', type);
-    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-    if (!user) {
-        console.log('Not logged in');
-        return;
-    }
-    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-    if (!data || !data[user]) {
-        console.log('No trading data found');
-        return;
-    }
-    let userData = data[user].tradingData;
-    if (!userData) {
-        console.log('Trading data missing');
-        return;
-    }
-    if (userData.positions && userData.positions.length > 0) {
-        console.log('Close existing position first');
-        return;
-    }
-    let margin = 500;
-    let leverage = 5;
-    let positionSize = margin * leverage;
-    let priceElem = document.getElementById('currentPriceLarge');
-    let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
-    let position = {
-        id: Date.now(),
-        symbol: 'BTCUSDT',
-        type: type,
-        margin: margin,
-        leverage: leverage,
-        positionSize: positionSize,
-        entryPrice: price,
-        timestamp: new Date().toLocaleTimeString()
-    };
-    userData.positions.push(position);
-    userData.balance -= margin;
-    userData.totalTrades = (userData.totalTrades || 0) + 1;
-    localStorage.setItem('usersData', JSON.stringify(data));
-    if (typeof loadUserTradingData === 'function') loadUserTradingData();
-    console.log(`✅ ${type.toUpperCase()} order placed! Margin: $${margin} @ ${leverage}X | Position: $${positionSize}`);
-    if (typeof showNotification === 'function') {
-        showNotification(`${type.toUpperCase()} order placed: $${margin} (${leverage}X) @ $${price}`, 'success');
-    }
-};
-
-// ==================== 2. DYNAMIC TP/SL BASED ON TIMEFRAME ====================
-function getTPSLByTimeframe(timeframe) {
-    switch(timeframe) {
-        case '1m':  return { tpPercent: 0.0025, slPercent: 0.0012 };
-        case '5m':  return { tpPercent: 0.006,   slPercent: 0.003 };
-        case '15m': return { tpPercent: 0.009,   slPercent: 0.0045 };
-        case '1h':  return { tpPercent: 0.0135,  slPercent: 0.00675 };
-        case '4h':  return { tpPercent: 0.02,    slPercent: 0.01 };
-        case '1D':  return { tpPercent: 0.035,   slPercent: 0.0175 };
-        default:    return { tpPercent: 0.006,   slPercent: 0.003 };
-    }
-}
-
-// ==================== 3. AUTO CLOSE POSITIONS (USES CURRENT TIMEFRAME) ====================
-window.autoClosePositions = function() {
-    let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-    if (!user) return;
-    let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-    if (!data || !data[user]) return;
-    let userData = data[user].tradingData;
-    if (!userData || !userData.positions || userData.positions.length === 0) return;
-
-    let priceElem = document.getElementById('currentPriceLarge');
-    let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
-    if (!currentPrice) return;
-
-    let tfKey = 'autoTradeTF_' + user;
-    let currentTF = localStorage.getItem(tfKey) || '5m';
-    let { tpPercent, slPercent } = getTPSLByTimeframe(currentTF);
-
-    let updated = false;
-    for (let i = 0; i < userData.positions.length; i++) {
-        let pos = userData.positions[i];
-        let leverage = pos.leverage || 1;
-        let positionSize = pos.positionSize || (pos.margin * leverage);
-        let pnlPercent = (pos.type === 'buy') 
-            ? (currentPrice - pos.entryPrice) / pos.entryPrice 
-            : (pos.entryPrice - currentPrice) / pos.entryPrice;
-        let pnl = pnlPercent * positionSize;
-        
-        if (pnlPercent >= tpPercent || pnlPercent <= -slPercent) {
-            let historyEntry = {
-                date: new Date().toLocaleString(),
-                timestamp: new Date().toISOString(),
-                type: pos.type,
-                entryPrice: pos.entryPrice,
-                exitPrice: currentPrice,
-                pnl: pnl,
-                pnlPercent: pnlPercent * 100,
-                positionSize: positionSize,
-                margin: pos.margin || pos.amount,
-                leverage: leverage,
-                timeframe: currentTF
-            };
-            userData.balance += (pos.margin || pos.amount) + pnl;
-            userData.totalTrades = (userData.totalTrades || 0) + 1;
-            if (pnl > 0) userData.winTrades = (userData.winTrades || 0) + 1;
-            userData.totalProfit = (userData.totalProfit || 0) + pnl;
-            userData.positions.splice(i, 1);
-            updated = true;
-            i--;
-            if (!userData.tradeHistory) userData.tradeHistory = [];
-            userData.tradeHistory.unshift(historyEntry);
-            if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
-            
-            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} (${currentTF}) | ${(pnlPercent*100).toFixed(2)}% | PnL: $${pnl.toFixed(2)} (${leverage}X)`;
-            if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
-            else console.log(msg);
-        }
-    }
-    if (updated) {
-        localStorage.setItem('usersData', JSON.stringify(data));
-        if (typeof loadUserTradingData === 'function') loadUserTradingData();
-    }
-};
-// ==================== AUTO TRADING BOT (ENGLISH) ====================
+       // ==================== AUTO TRADING BOT (ENGLISH - FIXED) ====================
 (function() {
     // Configuration
     let enabled = false;
@@ -6689,7 +6222,7 @@ window.autoClosePositions = function() {
     }
     loadUserSettings();
 
-    // TP/SL percentages based on timeframe
+    // TP/SL percentages based on timeframe (used by autoClosePositions)
     function getTPSLByTimeframe(tf) {
         switch(tf) {
             case '1m': return { tpPercent: 0.0025, slPercent: 0.0012 };
@@ -6728,7 +6261,7 @@ window.autoClosePositions = function() {
         return 50;
     }
 
-    // Auto close positions based on TP/SL
+    // Auto close positions based on TP/SL (uses existing position structure)
     window.autoClosePositions = function() {
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
         if (!user) return;
@@ -6748,18 +6281,20 @@ window.autoClosePositions = function() {
         let updated = false;
         for (let i = 0; i < userData.positions.length; i++) {
             let pos = userData.positions[i];
+            // Position may have margin/leverage or amount/leverage from original function
             let leverage = pos.leverage || 1;
-            let positionSize = pos.positionSize || (pos.margin * leverage);
+            let positionSize = pos.positionSize || (pos.amount * leverage);
+            let entryPrice = pos.entryPrice;
             let pnlPercent = (pos.type === 'buy') 
-                ? (currentPrice - pos.entryPrice) / pos.entryPrice 
-                : (pos.entryPrice - currentPrice) / pos.entryPrice;
+                ? (currentPrice - entryPrice) / entryPrice 
+                : (entryPrice - currentPrice) / entryPrice;
             let pnl = pnlPercent * positionSize;
             if (pnlPercent >= tpPercent || pnlPercent <= -slPercent) {
                 let historyEntry = {
                     date: new Date().toLocaleString(),
                     timestamp: new Date().toISOString(),
                     type: pos.type,
-                    entryPrice: pos.entryPrice,
+                    entryPrice: entryPrice,
                     exitPrice: currentPrice,
                     pnl: pnl,
                     pnlPercent: pnlPercent * 100,
@@ -6789,40 +6324,6 @@ window.autoClosePositions = function() {
         }
     };
 
-    // Execute trade function (if not already defined)
-    if (typeof window.executeTrade !== 'function') {
-        window.executeTrade = function(type) {
-            console.log('executeTrade called with type:', type);
-            let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-            if (!user) { console.log('Not logged in'); return; }
-            let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
-            if (!data || !data[user]) { console.log('No trading data'); return; }
-            let userData = data[user].tradingData;
-            if (!userData) { console.log('Trading data missing'); return; }
-            if (userData.positions && userData.positions.length > 0) { console.log('Open position exists'); return; }
-            let margin = 500, leverage = 5, positionSize = margin * leverage;
-            let priceElem = document.getElementById('currentPriceLarge');
-            let price = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 70000;
-            let position = {
-                id: Date.now(),
-                symbol: 'BTCUSDT',
-                type: type,
-                margin: margin,
-                leverage: leverage,
-                positionSize: positionSize,
-                entryPrice: price,
-                timestamp: new Date().toLocaleTimeString()
-            };
-            userData.positions.push(position);
-            userData.balance -= margin;
-            userData.totalTrades = (userData.totalTrades || 0) + 1;
-            localStorage.setItem('usersData', JSON.stringify(data));
-            if (typeof loadUserTradingData === 'function') loadUserTradingData();
-            console.log(`✅ ${type.toUpperCase()} order placed! Margin: $${margin} @ ${leverage}X`);
-            if (typeof showNotification === 'function') showNotification(`${type.toUpperCase()} order placed: $${margin} (${leverage}X) @ $${price}`, 'success');
-        };
-    }
-
     // Main auto trade check
     function checkAndTrade() {
         autoClosePositions();
@@ -6845,10 +6346,13 @@ window.autoClosePositions = function() {
         if (!action) return;
         if (cooldownLeft > 0) return;
 
+        // Use the original executeTrade function from your HTML
         if (typeof window.executeTrade === 'function') {
             window.executeTrade(action);
             lastTradeTime = now;
             if (typeof showNotification === 'function') showNotification(`🤖 AUTO ${action.toUpperCase()} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
+        } else {
+            console.error('executeTrade function not found');
         }
     }
 
@@ -6877,6 +6381,7 @@ window.autoClosePositions = function() {
         panel.style.alignItems = 'center';
         panel.style.justifyContent = 'space-between';
 
+        // Timeframe dropdown
         let select = document.createElement('select');
         select.id = 'autoTimeframe';
         select.style.background = '#1A1F33';
@@ -6898,6 +6403,7 @@ window.autoClosePositions = function() {
             if (typeof showNotification === 'function') showNotification(`Timeframe: ${selectedTF} | TP: ${(tpPercent*100).toFixed(2)}% | SL: ${(slPercent*100).toFixed(2)}%`, 'info');
         };
 
+        // Start/Stop button
         let startStopBtn = document.createElement('button');
         startStopBtn.id = 'autoStartStop';
         startStopBtn.textContent = enabled ? '⏸️ Stop Auto Trading' : '🤖 Start Auto Trading';
@@ -6923,6 +6429,7 @@ window.autoClosePositions = function() {
             }
         };
 
+        // Test BUY button - directly calls your existing executeTrade
         let testBuy = document.createElement('button');
         testBuy.textContent = '🔵 Test BUY';
         testBuy.style.background = '#22C55E';
@@ -6931,8 +6438,15 @@ window.autoClosePositions = function() {
         testBuy.style.borderRadius = '8px';
         testBuy.style.padding = '8px 16px';
         testBuy.style.cursor = 'pointer';
-        testBuy.onclick = () => { if (typeof window.executeTrade === 'function') window.executeTrade('buy'); else alert('executeTrade missing'); };
+        testBuy.onclick = () => {
+            if (typeof window.executeTrade === 'function') {
+                window.executeTrade('buy');
+            } else {
+                alert('executeTrade function not found!');
+            }
+        };
 
+        // Test SELL button
         let testSell = document.createElement('button');
         testSell.textContent = '🔴 Test SELL';
         testSell.style.background = '#EF4444';
@@ -6941,8 +6455,15 @@ window.autoClosePositions = function() {
         testSell.style.borderRadius = '8px';
         testSell.style.padding = '8px 16px';
         testSell.style.cursor = 'pointer';
-        testSell.onclick = () => { if (typeof window.executeTrade === 'function') window.executeTrade('sell'); else alert('executeTrade missing'); };
+        testSell.onclick = () => {
+            if (typeof window.executeTrade === 'function') {
+                window.executeTrade('sell');
+            } else {
+                alert('executeTrade function not found!');
+            }
+        };
 
+        // Audio toggle button
         let audioEnabledState = localStorage.getItem('audioAlertsEnabled') === 'true';
         let audioBtn = document.createElement('button');
         audioBtn.textContent = audioEnabledState ? '🔊 Audio ON' : '🔇 Audio OFF';
@@ -6961,6 +6482,7 @@ window.autoClosePositions = function() {
             if (typeof showNotification === 'function') showNotification(audioEnabledState ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info');
         };
 
+        // Trade History button
         let historyBtn = document.createElement('button');
         historyBtn.textContent = '📜 Trade History';
         historyBtn.style.background = '#3B82F6';
@@ -6971,6 +6493,7 @@ window.autoClosePositions = function() {
         historyBtn.style.cursor = 'pointer';
         historyBtn.onclick = showTradeHistory;
 
+        // Arrange buttons
         let leftDiv = document.createElement('div');
         leftDiv.style.display = 'flex';
         leftDiv.style.gap = '10px';
@@ -7013,10 +6536,12 @@ window.autoClosePositions = function() {
         document.getElementById('closeHist').onclick = () => document.getElementById('historyModal').remove();
     }
 
-    // Audio alerts hook
+    // Audio alerts hook (speaks 5 times on trade open/close)
+    // Save original functions
     let originalExecute = window.executeTrade;
     if (originalExecute) {
         window.executeTrade = function(type) {
+            // Call original function first
             originalExecute(type);
             let audioOn = localStorage.getItem('audioAlertsEnabled') === 'true';
             if (audioOn) {
@@ -7056,7 +6581,7 @@ window.autoClosePositions = function() {
         };
     }
 
-    // Hook into login/logout
+    // Hook into login/logout to restart auto trading
     let origLogin = window.loginWithCode;
     if (origLogin) {
         window.loginWithCode = async function() {
