@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Uses Recommendation Box Confidence</title>
+    <title>Auto Trading Bot - Reads Recommendation Box Signal</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -29,8 +29,8 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Recommendation Box Confidence)</h3>
-        <p style="color:#94A3B8;">Reads <code>sharedSignal</code> from localStorage – confidence comes from your main website's <strong>Ultimate Recommendation Box</strong> (<code>finalConfidence</code>).</p>
+        <h3>🤖 Auto Trading Bot (Reads Recommendation Box Signal)</h3>
+        <p style="color:#94A3B8;">Reads from <code>recBoxSignal</code> in localStorage – this comes from your main website's <strong>Ultimate Recommendation Box</strong> (confidence, signal, RSI).</p>
         <div class="flex-row">
             <select id="timeframeSelect">
                 <option value="1m">1m</option>
@@ -207,8 +207,9 @@
     }
 
     let currentSignal = null, currentConfidence = 0, currentRSI = 50;
+    // READ FROM recBoxSignal (recommendation box) NOT sharedSignal
     function readSignalFromLocalStorage() {
-        const signalData = localStorage.getItem('sharedSignal');
+        const signalData = localStorage.getItem('recBoxSignal');
         if (signalData) {
             try {
                 const data = JSON.parse(signalData);
@@ -225,7 +226,8 @@
                 }
             } catch(e) {}
         }
-        document.getElementById('statusDisplay').innerHTML = (autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF') + ' | ⚠️ No valid signal in localStorage (key: sharedSignal)';
+        document.getElementById('statusDisplay').innerHTML = (autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF') + ' | ⚠️ No valid recBoxSignal in localStorage';
+        document.getElementById('debugInfo').innerHTML = 'Make sure your main website writes to localStorage key "recBoxSignal" with {finalSignal, confidence, rsi, price, timestamp}.';
     }
 
     setInterval(readSignalFromLocalStorage, 2000);
@@ -275,7 +277,7 @@
     testSellBtn.onclick = () => executeTrade('sell', false);
     leverageSelect.onchange = () => {};
     audioToggleBtn.onclick = () => { audioEnabled = !audioEnabled; localStorage.setItem(`audioEnabled_${currentUser}`, audioEnabled); audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF'; audioToggleBtn.style.background = audioEnabled ? '#22C55E' : '#6B7280'; showNotification(audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info'); };
-    resetDataBtn.onclick = () => { if (confirm('Reset all demo data? Balance will be $10,000, positions and history cleared.')) { usersData[currentUser] = { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [], tradeHistory: [] }; saveUserData(); loadUserData(); showNotification('Demo data reset', 'info'); } };
+    resetDataBtn.onclick = () => { if (confirm('Reset all demo data?')) { usersData[currentUser] = { balance: 10000, totalTrades: 0, winTrades: 0, totalProfit: 0, positions: [], tradeHistory: [] }; saveUserData(); loadUserData(); showNotification('Demo data reset', 'info'); } };
     function showTradeHistory() {
         const history = usersData[currentUser].tradeHistory || [];
         if (history.length === 0) { alert('No trade history'); return; }
