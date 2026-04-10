@@ -6163,22 +6163,22 @@
         };
 // Save only the Recommendation Box signal to localStorage (unique key)
 setInterval(() => {
-    const signalElem = document.getElementById('finalSignal');
-    const confidenceElem = document.getElementById('finalConfidence');
-    const rsiElem = document.getElementById('rsiValue');
-    const priceElem = document.getElementById('currentPriceLarge');
+    const recSignal = document.getElementById('finalSignal');
+    const recConfidence = document.getElementById('finalConfidence');
+    const recRsi = document.getElementById('rsiValue');
+    const recPrice = document.getElementById('currentPriceLarge');
     
-    if (signalElem && confidenceElem && rsiElem) {
-        let conf = parseFloat(confidenceElem.innerText);
-        if (isNaN(conf)) conf = parseFloat(confidenceElem.innerText.replace('%', ''));
+    if (recSignal && recConfidence && recRsi) {
+        let confidence = parseFloat(recConfidence.innerText);
+        if (isNaN(confidence)) confidence = parseFloat(recConfidence.innerText.replace('%', ''));
         const data = {
-            signal: signalElem.innerText.trim(),
-            confidence: conf || 0,
-            rsi: parseFloat(rsiElem.innerText) || 50,
-            price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0,
+            signal: recSignal.innerText.trim(),
+            confidence: confidence || 0,
+            rsi: parseFloat(recRsi.innerText) || 50,
+            price: recPrice ? parseFloat(recPrice.innerText.replace('$', '').replace(',', '')) : 0,
             time: Date.now()
         };
-        localStorage.setItem('PRIME_REC_SIGNAL', JSON.stringify(data));
+        localStorage.setItem('REC_BOX_SIGNAL', JSON.stringify(data));
         console.log('✅ Recommendation Box data saved:', data);
     }
 }, 1000);
