@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Reads Recommendation Box Signal</title>
+    <title>Auto Trading Bot - Reads ONLY Recommendation Box</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -17,11 +17,6 @@
         .btn-sell { background: #EF4444; border-color: #EF4444; }
         .status { background: #1A1F33; border-radius: 12px; padding: 10px; font-family: monospace; font-size: 0.85rem; color: #F59E0B; margin-bottom: 10px; }
         .debug { font-size: 0.75rem; color: #94A3B8; margin-top: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #2A3045; }
-        th { background: #1A1F33; color: #94A3B8; }
-        .positive { color: #22C55E; }
-        .negative { color: #EF4444; }
         .notification { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; z-index: 10001; }
         input:read-only { opacity: 0.7; cursor: not-allowed; }
     </style>
@@ -29,16 +24,13 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Reads Recommendation Box Signal)</h3>
-        <p style="color:#94A3B8;">Reads from <code>recBoxSignal</code> in localStorage – this comes from your main website's <strong>Ultimate Recommendation Box</strong> (confidence, signal, RSI).</p>
+        <h3>🤖 Auto Trading Bot (Reads Recommendation Box Signal Only)</h3>
+        <p style="color:#94A3B8;">উৎস: <code>recBoxSignal</code> – শুধু আপনার ওয়েবসাইটের <strong>ULTIMATE TRADING RECOMMENDATION BOX</strong> থেকে ডাটা নেয়। চার্টের AI সিগন্যাল সম্পূর্ণ উপেক্ষা করা হয়।</p>
         <div class="flex-row">
             <select id="timeframeSelect">
-                <option value="1m">1m</option>
-                <option value="5m">5m</option>
-                <option value="15m" selected>15m</option>
-                <option value="1h">1h</option>
-                <option value="4h">4h</option>
-                <option value="1D">1D</option>
+                <option value="1m">1m</option><option value="5m">5m</option>
+                <option value="15m" selected>15m</option><option value="1h">1h</option>
+                <option value="4h">4h</option><option value="1D">1D</option>
             </select>
             <button id="startStopBtn">🤖 Start Auto Trading</button>
             <button id="testBuyBtn" class="btn-buy">🔵 Test BUY ($500)</button>
@@ -73,7 +65,7 @@
     </div>
 </div>
 <script>
-    // ==================== PERSISTENT STATE (localStorage) ====================
+    // ==================== USER DATA (persistent) ====================
     let currentUser = localStorage.getItem('autoBotUser') || 'default';
     let usersData = JSON.parse(localStorage.getItem('autoBotUsersData')) || {};
     let autoEnabled = localStorage.getItem(`autoEnabled_${currentUser}`) === 'true';
@@ -166,6 +158,7 @@
         speakMessage('Right time close trade');
     };
 
+    // TP/SL based on timeframe
     function getTPSLByTimeframe(tf) {
         switch(tf) {
             case '1m': return { tp: 0.0025, sl: 0.0012 };
@@ -206,14 +199,14 @@
         if (updated) { saveUserData(); loadUserData(); }
     }
 
+    // ========== শুধুমাত্র recBoxSignal পড়ুন (চার্টের AI সিগন্যাল উপেক্ষা) ==========
     let currentSignal = null, currentConfidence = 0, currentRSI = 50;
-    // READ FROM recBoxSignal (recommendation box) NOT sharedSignal
-    function readSignalFromLocalStorage() {
-        const signalData = localStorage.getItem('recBoxSignal');
-        if (signalData) {
+    function readRecBoxSignal() {
+        const raw = localStorage.getItem('recBoxSignal');
+        if (raw) {
             try {
-                const data = JSON.parse(signalData);
-                if (Date.now() - data.timestamp < 10000) {
+                const data = JSON.parse(raw);
+                if (Date.now() - data.timestamp < 10000) { // 10 সেকেন্ডের মধ্যে
                     currentSignal = data.finalSignal ? data.finalSignal.toUpperCase() : null;
                     currentConfidence = parseFloat(data.confidence) || 0;
                     currentRSI = parseFloat(data.rsi) || 50;
@@ -221,16 +214,15 @@
                     let statusMsg = autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF';
                     statusMsg += ` | Signal: ${currentSignal || 'N/A'} | Conf: ${currentConfidence}% | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
                     document.getElementById('statusDisplay').innerHTML = statusMsg;
-                    document.getElementById('debugInfo').innerHTML = `BUY condition: ${currentSignal === 'BUY'} && conf>=90 = ${currentConfidence >= 90} && RSI<30 = ${currentRSI < 30} | SELL condition: ${currentSignal === 'SELL'} && conf>=90 = ${currentConfidence >= 90} && RSI>70 = ${currentRSI > 70}`;
+                    document.getElementById('debugInfo').innerHTML = `BUY শর্ত: ${currentSignal === 'BUY'} && conf≥90 = ${currentConfidence >= 90} && RSI<30 = ${currentRSI < 30} | SELL শর্ত: ${currentSignal === 'SELL'} && conf≥90 = ${currentConfidence >= 90} && RSI>70 = ${currentRSI > 70}`;
                     return;
                 }
             } catch(e) {}
         }
-        document.getElementById('statusDisplay').innerHTML = (autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF') + ' | ⚠️ No valid recBoxSignal in localStorage';
-        document.getElementById('debugInfo').innerHTML = 'Make sure your main website writes to localStorage key "recBoxSignal" with {finalSignal, confidence, rsi, price, timestamp}.';
+        document.getElementById('statusDisplay').innerHTML = (autoEnabled ? '🟢 Auto trade ACTIVE' : '⏸️ Auto trade OFF') + ' | ⚠️ recBoxSignal পাওয়া যায়নি (মূল ওয়েবসাইট কি সিগন্যাল দিচ্ছে?)';
     }
 
-    setInterval(readSignalFromLocalStorage, 2000);
+    setInterval(readRecBoxSignal, 1000); // প্রতি ১ সেকেন্ডে লাইভ আপডেট
 
     let autoInterval = null, lastTradeTime = 0;
     const COOLDOWN = 60000;
@@ -300,7 +292,7 @@
     }
     function showNotification(msg, type) { const notif = document.createElement('div'); notif.className = 'notification'; notif.textContent = msg; notif.style.background = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#3B82F6'; document.body.appendChild(notif); setTimeout(() => notif.remove(), 3000); }
 
-    loadUserData(); readSignalFromLocalStorage();
+    loadUserData(); readRecBoxSignal();
     setInterval(() => { const data = usersData[currentUser]; if (data.positions.length > 0) updateAllPnL(data.positions); }, 2000);
 </script>
 </body>
