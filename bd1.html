@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Persistent</title>
+    <title>Auto Trading Bot - Fixed $500 per trade</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -22,13 +22,14 @@
         .positive { color: #22C55E; }
         .negative { color: #EF4444; }
         .notification { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; color: white; z-index: 10001; }
+        input:read-only { opacity: 0.7; cursor: not-allowed; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Persistent Auto Trading Bot</h3>
-        <p style="color:#94A3B8; margin-bottom:15px;">Reads signals from main website via <code>localStorage</code> (key: <code>sharedSignal</code>). Settings & history survive page reload.</p>
+        <h3>🤖 Persistent Auto Trading Bot (Fixed $500 per trade)</h3>
+        <p style="color:#94A3B8; margin-bottom:15px;">Reads signals from main website via <code>localStorage</code> (key: <code>sharedSignal</code>). Every trade (manual or auto) uses exactly <strong>$500</strong> margin.</p>
         <div class="flex-row">
             <select id="timeframeSelect">
                 <option value="1m">1m</option>
@@ -39,8 +40,8 @@
                 <option value="1D">1D</option>
             </select>
             <button id="startStopBtn">🤖 Start Auto Trading</button>
-            <button id="testBuyBtn" class="btn-buy">🔵 Test BUY</button>
-            <button id="testSellBtn" class="btn-sell">🔴 Test SELL</button>
+            <button id="testBuyBtn" class="btn-buy">🔵 Test BUY ($500)</button>
+            <button id="testSellBtn" class="btn-sell">🔴 Test SELL ($500)</button>
             <button id="audioToggleBtn">🔊 Audio ON</button>
             <button id="historyBtn">📜 Trade History</button>
             <button id="resetDataBtn" style="background:#6B7280;">🔄 Reset Demo Data</button>
@@ -58,7 +59,7 @@
         </div>
         <div class="flex-row">
             <label>Trade Amount ($):</label>
-            <input type="number" id="tradeAmount" value="100" style="width:120px;">
+            <input type="number" id="tradeAmount" value="500" readonly style="width:120px;">
             <label>Leverage:</label>
             <select id="leverageSelect">
                 <option value="1">1X</option>
@@ -83,12 +84,10 @@
     let currentUser = localStorage.getItem('autoBotUser') || 'default';
     let usersData = JSON.parse(localStorage.getItem('autoBotUsersData')) || {};
     
-    // Auto trading enabled state – saved per user
     let autoEnabled = localStorage.getItem(`autoEnabled_${currentUser}`) === 'true';
     let selectedTF = localStorage.getItem(`timeframe_${currentUser}`) || '5m';
     let audioEnabled = localStorage.getItem(`audioEnabled_${currentUser}`) === 'true';
 
-    // Initialize user data if missing
     if (!usersData[currentUser]) {
         usersData[currentUser] = {
             balance: 10000,
@@ -123,7 +122,7 @@
         }
         container.innerHTML = positions.map(p => `
             <div style="background:#1A1F33; border-left:3px solid ${p.type==='buy'?'#22C55E':'#EF4444'}; padding:8px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between;">
-                <div><strong>${p.type.toUpperCase()}</strong> ${p.amount} @ ${p.entryPrice} (${p.leverage}X)<br>
+                <div><strong>${p.type.toUpperCase()}</strong> $${p.amount} @ ${p.entryPrice} (${p.leverage}X)<br>
                 <span style="font-size:0.7rem;">Current P&L: <span id="pnl_${p.id}">0.00</span></span></div>
                 <button onclick="closePosition(${p.id})" style="background:#EF4444; padding:4px 8px;">X</button>
             </div>
@@ -145,12 +144,12 @@
         });
     }
 
-    // ==================== TRADE EXECUTION ====================
-    let currentPrice = 67000; // updated from signal
+    // ==================== TRADE EXECUTION (fixed $500) ====================
+    let currentPrice = 67000;
     let currentLeverage = parseInt(document.getElementById('leverageSelect')?.value) || 5;
 
     function executeTrade(type, isAuto = false) {
-        const amount = isAuto ? 500 : parseFloat(document.getElementById('tradeAmount').value) || 100;
+        const amount = 500;   // Fixed $500 per trade
         const userData = usersData[currentUser];
         if (amount > userData.balance) {
             showNotification('Insufficient balance!', 'error');
@@ -192,7 +191,6 @@
         userData.balance += pos.amount + pnl;
         if (pnl > 0) userData.winTrades++;
         userData.totalProfit += pnl;
-        // Add to history
         const historyEntry = {
             date: new Date().toLocaleString(),
             type: pos.type,
@@ -290,7 +288,7 @@
 
     setInterval(readSignalFromLocalStorage, 2000);
 
-    // ==================== AUTO TRADING LOOP (Persistent) ====================
+    // ==================== AUTO TRADING LOOP ====================
     let autoInterval = null;
     let lastTradeTime = 0;
     const COOLDOWN = 60000;
@@ -322,7 +320,7 @@
         autoInterval = null;
     }
 
-    // ==================== UI CONTROLS & PERSISTENCE ====================
+    // ==================== UI CONTROLS ====================
     const startStopBtn = document.getElementById('startStopBtn');
     const timeframeSelect = document.getElementById('timeframeSelect');
     const testBuyBtn = document.getElementById('testBuyBtn');
@@ -331,9 +329,7 @@
     const historyBtn = document.getElementById('historyBtn');
     const resetDataBtn = document.getElementById('resetDataBtn');
     const leverageSelect = document.getElementById('leverageSelect');
-    const tradeAmountInput = document.getElementById('tradeAmount');
 
-    // Load saved UI state
     timeframeSelect.value = selectedTF;
     if (autoEnabled) {
         startStopBtn.textContent = '⏸️ Stop Auto Trading';
@@ -371,7 +367,6 @@
     testSellBtn.onclick = () => executeTrade('sell', false);
 
     leverageSelect.onchange = () => {};
-    tradeAmountInput.oninput = () => {};
 
     audioToggleBtn.onclick = () => {
         audioEnabled = !audioEnabled;
@@ -414,7 +409,6 @@
     }
     historyBtn.onclick = showTradeHistory;
 
-    // ==================== AUDIO ALERTS ====================
     function speakMessage(message) {
         if (!audioEnabled) return;
         let count = 0;
@@ -439,7 +433,6 @@
         setTimeout(() => notif.remove(), 3000);
     }
 
-    // ==================== INIT ====================
     loadUserData();
     readSignalFromLocalStorage();
     setInterval(() => {
