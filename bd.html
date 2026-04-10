@@ -6161,8 +6161,8 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-// Share ONLY the Recommendation Box signal using a unique key 'recBoxSignal'
-function shareRecBoxSignal() {
+// শুধুমাত্র রেকমেন্ডেশন বক্সের ডাটা localStorage-এ লিখুন (লাইভ আপডেট)
+function updateRecommendationBoxSignal() {
     const signalElem = document.getElementById('finalSignal');
     const confidenceElem = document.getElementById('finalConfidence');
     const rsiElem = document.getElementById('rsiValue');
@@ -6174,23 +6174,21 @@ function shareRecBoxSignal() {
         if (isNaN(confidence)) {
             confidence = parseFloat(confText.replace('%', ''));
         }
-        const signalData = {
+        const recData = {
             finalSignal: signalElem.innerText.trim(),
             confidence: isNaN(confidence) ? 0 : confidence,
             rsi: parseFloat(rsiElem.innerText) || 50,
-            price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : (typeof currentPrice !== 'undefined' ? currentPrice : 0),
+            price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0,
             timestamp: Date.now()
         };
-        // Use a different key to avoid conflict with chart's AI signal
-        localStorage.setItem('recBoxSignal', JSON.stringify(signalData));
-        console.log('✅ Recommendation Box signal saved to recBoxSignal:', signalData);
-    } else {
-        console.warn('Missing elements: finalSignal, finalConfidence, or rsiValue');
+        localStorage.setItem('recBoxSignal', JSON.stringify(recData));
+        // কনসোল লগ (ডিবাগের জন্য)
+        console.log('📢 Recommendation Box signal saved:', recData);
     }
 }
 
-// Share every 3 seconds
-setInterval(shareRecBoxSignal, 3000);
+// প্রতি ১ সেকেন্ডে আপডেট করুন (লাইভ feel এর জন্য)
+setInterval(updateRecommendationBoxSignal, 1000);
     </script>
     
 </body>
