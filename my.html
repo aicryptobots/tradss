@@ -6161,7 +6161,7 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-  // ==================== 1. EXECUTE TRADE FUNCTION (AMOUNT = $500, LEVERAGE = 5x) ====================
+// ==================== 1. EXECUTE TRADE FUNCTION (AMOUNT = $500, LEVERAGE = 5x) ====================
 window.executeTrade = function(type) {
     console.log('executeTrade called with type:', type);
     let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
@@ -6209,7 +6209,27 @@ window.executeTrade = function(type) {
     }
 };
 
-// ==================== 2. AUTO CLOSE POSITIONS (TP = 1.5% / SL = 0.75%) ====================
+// ==================== 2. AUTO CLOSE POSITIONS (DYNAMIC TP/SL BASED ON TIMEFRAME) ====================
+function getTPSLByTimeframe(timeframe) {
+    // Returns { tpPercent, slPercent } for given timeframe string
+    switch(timeframe) {
+        case '1m':
+            return { tpPercent: 0.0025, slPercent: 0.0012 };  // 0.25% / 0.12%
+        case '5m':
+            return { tpPercent: 0.006, slPercent: 0.003 };     // 0.6% / 0.3%
+        case '15m':
+            return { tpPercent: 0.009, slPercent: 0.0045 };    // 0.9% / 0.45%
+        case '1h':
+            return { tpPercent: 0.0135, slPercent: 0.00675 };  // 1.35% / 0.675%
+        case '4h':
+            return { tpPercent: 0.02, slPercent: 0.01 };       // 2.0% / 1.0%
+        case '1D':
+            return { tpPercent: 0.035, slPercent: 0.0175 };    // 3.5% / 1.75%
+        default:
+            return { tpPercent: 0.006, slPercent: 0.003 };     // default 5m
+    }
+}
+
 window.autoClosePositions = function() {
     let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
     if (!user) return;
@@ -6222,8 +6242,9 @@ window.autoClosePositions = function() {
     let currentPrice = priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : 0;
     if (!currentPrice) return;
 
-    const TP_PERCENT = 0.015;   // 1.5% profit (price move)
-    const SL_PERCENT = 0.0075;  // 0.75% loss (price move)
+    // Get current selected timeframe (saved in localStorage by the auto trading bot)
+    let currentTF = localStorage.getItem('autoTradeTF') || '5m';
+    let { tpPercent, slPercent } = getTPSLByTimeframe(currentTF);
 
     let updated = false;
     for (let i = 0; i < userData.positions.length; i++) {
@@ -6235,7 +6256,7 @@ window.autoClosePositions = function() {
             : (pos.entryPrice - currentPrice) / pos.entryPrice;
         let pnl = pnlPercent * positionSize;
         
-        if (pnlPercent >= TP_PERCENT || pnlPercent <= -SL_PERCENT) {
+        if (pnlPercent >= tpPercent || pnlPercent <= -slPercent) {
             // Create history entry
             let historyEntry = {
                 date: new Date().toLocaleString(),
@@ -6247,7 +6268,8 @@ window.autoClosePositions = function() {
                 pnlPercent: pnlPercent * 100,
                 positionSize: positionSize,
                 margin: pos.margin || pos.amount,
-                leverage: leverage
+                leverage: leverage,
+                timeframe: currentTF
             };
             // Update balance and stats
             userData.balance += (pos.margin || pos.amount) + pnl;
@@ -6262,7 +6284,7 @@ window.autoClosePositions = function() {
             userData.tradeHistory.unshift(historyEntry);
             if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
             
-            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)} (${leverage}X)`;
+            let msg = `🔒 Auto closed ${pos.type.toUpperCase()} (${currentTF}) | ${(pnlPercent*100).toFixed(2)}% | PnL: $${pnl.toFixed(2)} (${leverage}X)`;
             if (typeof showNotification === 'function') showNotification(msg, pnl >= 0 ? 'success' : 'error');
             else console.log(msg);
         }
@@ -6317,7 +6339,7 @@ window.autoClosePositions = function() {
     }
 
     function checkAndTrade() {
-        // Auto-close any positions that hit TP/SL
+        // Auto-close any positions that hit TP/SL (uses current timeframe)
         autoClosePositions();
 
         if (!enabled) {
@@ -6353,7 +6375,7 @@ window.autoClosePositions = function() {
         if (signal === 'buy' && rsi < 30) action = 'buy';
         else if (signal === 'sell' && rsi > 70) action = 'sell';
 
-        let statusMsg = `🔄 Signal: ${signal ? signal.toUpperCase() : 'NONE'} | RSI=${rsi.toFixed(1)} | ${action ? 'Action: '+action.toUpperCase() : 'No action'}`;
+        let statusMsg = `🔄 Timeframe: ${selectedTF} | Signal: ${signal ? signal.toUpperCase() : 'NONE'} | RSI=${rsi.toFixed(1)} | ${action ? 'Action: '+action.toUpperCase() : 'No action'}`;
         if (cooldownLeft > 0) statusMsg += ` | Cooldown: ${Math.ceil(cooldownLeft/1000)}s`;
         updateStatusDisplay(statusMsg);
 
@@ -6365,7 +6387,7 @@ window.autoClosePositions = function() {
             lastTradeTime = now;
             updateStatusDisplay(`✅ ${action.toUpperCase()} trade executed!`);
             if (typeof showNotification === 'function') {
-                showNotification(`🤖 AUTO ${action.toUpperCase()} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
+                showNotification(`🤖 AUTO ${action.toUpperCase()} | ${selectedTF} | Signal:${signal.toUpperCase()} | RSI:${rsi.toFixed(0)}`, 'success');
             }
         } else {
             updateStatusDisplay('❌ executeTrade function missing');
@@ -6408,7 +6430,10 @@ window.autoClosePositions = function() {
         select.onchange = (e) => {
             selectedTF = e.target.value;
             localStorage.setItem('autoTradeTF', selectedTF);
-            if (typeof showNotification === 'function') showNotification(`Timeframe: ${selectedTF}`, 'info');
+            let { tpPercent, slPercent } = getTPSLByTimeframe(selectedTF);
+            if (typeof showNotification === 'function') {
+                showNotification(`Timeframe: ${selectedTF} | TP: ${(tpPercent*100).toFixed(2)}% | SL: ${(slPercent*100).toFixed(2)}%`, 'info');
+            }
         };
 
         let btn = document.createElement('button');
@@ -6553,7 +6578,7 @@ window.autoClosePositions = function() {
         if (history.length === 0) { alert('No trade history yet'); return; }
 
         let modalHtml = `
-        <div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto; box-shadow:0 0 50px rgba(0,0,0,0.8);">
+        <div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:900px; max-height:80%; overflow:auto; box-shadow:0 0 50px rgba(0,0,0,0.8);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3 style="color:#3B82F6;">📜 Trade History</h3>
                 <button id="closeModalBtn" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px; cursor:pointer;">Close</button>
@@ -6561,28 +6586,30 @@ window.autoClosePositions = function() {
             <table style="width:100%; border-collapse:collapse; color:#E5E7EB;">
                 <thead><tr style="background:#1A1F33;">
                     <th style="padding:8px; text-align:left;">Date & Time</th>
+                    <th style="padding:8px; text-align:left;">TF</th>
                     <th style="padding:8px; text-align:left;">Type</th>
                     <th style="padding:8px; text-align:left;">Entry</th>
                     <th style="padding:8px; text-align:left;">Exit</th>
                     <th style="padding:8px; text-align:left;">P&L</th>
-                </td></thead><tbody>`;
+                </tr></thead><tbody>`;
         history.forEach(trade => {
             let pnlColor = trade.pnl >= 0 ? '#22C55E' : '#EF4444';
             modalHtml += `<tr style="border-bottom:1px solid #2A3045;">
                 <td style="padding:8px;">${trade.date || trade.timestamp || ''}</td>
+                <td style="padding:8px;">${trade.timeframe || '-'}</td>
                 <td style="padding:8px; text-transform:uppercase; color:${trade.type === 'buy' ? '#22C55E' : '#EF4444'}">${trade.type}</td>
                 <td style="padding:8px;">$${trade.entryPrice?.toFixed(2)}</td>
                 <td style="padding:8px;">$${trade.exitPrice?.toFixed(2)}</td>
                 <td style="padding:8px; color:${pnlColor};">$${trade.pnl?.toFixed(2)} (${(trade.pnlPercent || 0).toFixed(1)}%)</td>
             </tr>`;
         });
-        modalHtml += `</tbody><table></div>`;
+        modalHtml += `</tbody></table></div>`;
         if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         document.getElementById('closeModalBtn').onclick = () => document.getElementById('historyModal').remove();
     }
 
-    // Override manual close function to save history
+    // Override manual close function to save history with timeframe
     if (typeof window.closePosition === 'function') {
         const originalClose = window.closePosition;
         window.closePosition = function(id) {
@@ -6603,6 +6630,7 @@ window.autoClosePositions = function() {
                 ? (currentPrice - pos.entryPrice) / pos.entryPrice 
                 : (pos.entryPrice - currentPrice) / pos.entryPrice;
             let pnl = pnlPercent * positionSize;
+            let currentTF = localStorage.getItem('autoTradeTF') || '5m';
             let historyEntry = {
                 date: new Date().toLocaleString(),
                 timestamp: new Date().toISOString(),
@@ -6613,7 +6641,8 @@ window.autoClosePositions = function() {
                 pnlPercent: pnlPercent * 100,
                 positionSize: positionSize,
                 margin: pos.margin || pos.amount,
-                leverage: leverage
+                leverage: leverage,
+                timeframe: currentTF
             };
             originalClose(id);
             setTimeout(() => {
