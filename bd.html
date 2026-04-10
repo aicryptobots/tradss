@@ -6161,28 +6161,35 @@
             updateMarginInfo();
             document.getElementById('alertToggle').classList.add('active');
         };
-// ফাংশন: বর্তমান সিগন্যাল localStorage এ সেভ করবে
+// Updated function: shares signal, confidence, RSI, and price to localStorage
 function shareSignalToAutoBot() {
     const signalElem = document.getElementById('finalSignal');
+    const confidenceElem = document.getElementById('finalConfidence');
     const rsiElem = document.getElementById('rsiValue');
     const priceElem = document.getElementById('currentPriceLarge');
     
-    if (signalElem && rsiElem) {
+    if (signalElem && rsiElem && confidenceElem) {
+        let confidenceValue = parseFloat(confidenceElem.innerText);
+        // If confidence text includes '%' (e.g., "90%"), remove it
+        if (isNaN(confidenceValue)) {
+            confidenceValue = parseFloat(confidenceElem.innerText.replace('%', ''));
+        }
         const signalData = {
             finalSignal: signalElem.innerText.trim(),
+            confidence: isNaN(confidenceValue) ? 0 : confidenceValue,
             rsi: parseFloat(rsiElem.innerText) || 50,
             price: priceElem ? parseFloat(priceElem.innerText.replace('$', '').replace(',', '')) : currentPrice,
             timestamp: Date.now()
         };
         localStorage.setItem('sharedSignal', JSON.stringify(signalData));
-        console.log('✅ Signal shared:', signalData);
+        console.log('✅ Signal shared (with confidence):', signalData);
+    } else {
+        console.warn('Missing elements: finalSignal, finalConfidence, or rsiValue');
     }
 }
 
-// প্রতি ৩ সেকেন্ডে সিগন্যাল শেয়ার করুন (অথবা প্রতিবার AI আপডেটের সময়)
+// Share signal every 3 seconds (or you can call it inside runAIAnalysis)
 setInterval(shareSignalToAutoBot, 3000);
-
-// আপনার বিদ্যমান runAIAnalysis() ফাংশনের শেষেও shareSignalToAutoBot() কল করতে পারেন
     </script>
     
 </body>
