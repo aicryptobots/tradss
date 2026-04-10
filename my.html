@@ -6289,13 +6289,14 @@ window.autoClosePositions = function() {
     }
 };
 
-// ==================== 4. AUTO TRADING BOT (PER‑ACCOUNT TIMEFRAME) ====================
+// ==================== 4. AUTO TRADING BOT (PER‑ACCOUNT TIMEFRAME + 1 MIN LOGIN DELAY) ====================
 (function() {
     let enabled = false;
     let interval = null;
     let lastTradeTime = 0;
     const COOLDOWN = 60000;
     let selectedTF = '5m';
+    let loginTime = null;  // Timestamp of last login
 
     function getStorageKey(base) {
         let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
@@ -6350,6 +6351,21 @@ window.autoClosePositions = function() {
             updateStatusDisplay('🔴 Not logged in');
             return;
         }
+
+        // --- 1 MINUTE LOGIN DELAY CHECK ---
+        if (loginTime === null) {
+            // No login recorded yet – set it now
+            loginTime = Date.now();
+            updateStatusDisplay('⏳ Just logged in. Waiting 60 seconds before first trade...');
+            return;
+        }
+        let timeSinceLogin = Date.now() - loginTime;
+        if (timeSinceLogin < 60000) {
+            let remaining = Math.ceil((60000 - timeSinceLogin) / 1000);
+            updateStatusDisplay(`⏳ Login cooldown: ${remaining}s left – no trading`);
+            return;
+        }
+
         let data = (typeof usersData !== 'undefined') ? usersData : window.usersData;
         if (!data || !data[user]) {
             updateStatusDisplay('⚠️ No user data');
@@ -6507,14 +6523,20 @@ window.autoClosePositions = function() {
         footer.parentNode.insertBefore(statusDiv, footer.nextSibling);
     }
 
+    // Reset login timer when user logs in
     function onLogin() {
+        loginTime = Date.now();  // Start 60‑second cooldown
         if (enabled) {
             if (interval) clearInterval(interval);
             interval = setInterval(checkAndTrade, 10000);
-            checkAndTrade();
+            checkAndTrade(); // will show cooldown message
+            if (typeof showNotification === 'function') {
+                showNotification('Logged in – auto trading will start after 60 seconds', 'info');
+            }
         }
     }
 
+    // Hook into your existing login function
     if (typeof loginWithCode === 'function') {
         const origLogin = loginWithCode;
         window.loginWithCode = async function() {
@@ -6527,6 +6549,7 @@ window.autoClosePositions = function() {
         window.logout = function() {
             if (interval) clearInterval(interval);
             interval = null;
+            loginTime = null;   // reset on logout
             updateStatusDisplay('⏹️ Auto trading disabled (logged out)');
             origLogout();
         };
@@ -6534,9 +6557,11 @@ window.autoClosePositions = function() {
 
     window.addEventListener('load', () => {
         addPanel();
-        if (enabled) {
-            let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
-            if (user) {
+        // If already logged in when page loads, set loginTime now
+        let user = (typeof currentUser !== 'undefined') ? currentUser : window.currentUser;
+        if (user) {
+            loginTime = Date.now();
+            if (enabled) {
                 interval = setInterval(checkAndTrade, 10000);
                 setTimeout(checkAndTrade, 2000);
             }
@@ -6590,7 +6615,7 @@ window.autoClosePositions = function() {
                     <th style="padding:8px; text-align:left;">Entry</th>
                     <th style="padding:8px; text-align:left;">Exit</th>
                     <th style="padding:8px; text-align:left;">P&L</th>
-                 </tr></thead><tbody>`;
+                </td></thead><tbody>`;
         history.forEach(trade => {
             let pnlColor = trade.pnl >= 0 ? '#22C55E' : '#EF4444';
             modalHtml += `<tr style="border-bottom:1px solid #2A3045;">
@@ -6600,7 +6625,7 @@ window.autoClosePositions = function() {
                 <td style="padding:8px;">$${trade.entryPrice?.toFixed(2)}</td>
                 <td style="padding:8px;">$${trade.exitPrice?.toFixed(2)}</td>
                 <td style="padding:8px; color:${pnlColor};">$${trade.pnl?.toFixed(2)} (${(trade.pnlPercent || 0).toFixed(1)}%)</td>
-             </tr>`;
+            </tr>`;
         });
         modalHtml += `</tbody></table></div>`;
         if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
