@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Auto Trading Bot - Reads Confidence from localStorage</title>
+    <title>Auto Trading Bot - Full (Confidence 90% + RSI)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #03050A; color: #E5E7EB; padding: 20px; }
@@ -29,7 +29,7 @@
 <body>
 <div class="container">
     <div class="card">
-        <h3>🤖 Auto Trading Bot (Confidence + Signal + RSI)</h3>
+        <h3>🤖 Auto Trading Bot (Confidence ≥ 90% + Signal + RSI)</h3>
         <p style="color:#94A3B8; margin-bottom:15px;">Reads <code>sharedSignal</code> from localStorage: <strong>finalSignal</strong>, <strong>confidence</strong>, <strong>rsi</strong>, <strong>price</strong>. Auto trade triggers when confidence ≥ 90%, signal matches, and RSI conditions are met.</p>
         <div class="flex-row">
             <select id="timeframeSelect">
