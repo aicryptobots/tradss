@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Auto Trading Bot - Standalone</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #03050A;
+            color: #E5E7EB;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            background: #0B0F1C;
+            border: 1px solid #2A3045;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .card h3 {
+            color: #3B82F6;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        button, select {
+            background: #1A1F33;
+            border: 1px solid #3B82F6;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        button:hover, select:hover {
+            background: #3B82F6;
+            transform: translateY(-2px);
+        }
+        .btn-buy { background: #22C55E; border-color: #22C55E; }
+        .btn-sell { background: #EF4444; border-color: #EF4444; }
+        .btn-stop { background: #F59E0B; border-color: #F59E0B; }
+        .status {
+            background: #1A1F33;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #F59E0B;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #2A3045;
+        }
+        th {
+            background: #1A1F33;
+            color: #94A3B8;
+        }
+        .positive { color: #22C55E; }
+        .negative { color: #EF4444; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-buy { background: rgba(34,197,94,0.2); color: #22C55E; }
+        .badge-sell { background: rgba(239,68,68,0.2); color: #EF4444; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h3>🤖 Standalone Auto Trading Bot</h3>
+        <p style="color:#94A3B8; margin-bottom:15px;">Reads signals & RSI from main website via <strong>localStorage</strong> (shared key: <code>sharedSignal</code>).</p>
+        <div class="flex-row">
+            <select id="timeframeSelect">
+                <option value="1m">1m</option>
+                <option value="5m" selected>5m</option>
+                <option value="15m">15m</option>
+                <option value="1h">1h</option>
+                <option value="4h">4h</option>
+                <option value="1D">1D</option>
+            </select>
+            <button id="startStopBtn">🤖 Start Auto Trading</button>
+            <button id="testBuyBtn" class="btn-buy">🔵 Test BUY</button>
+            <button id="testSellBtn" class="btn-sell">🔴 Test SELL</button>
+            <button id="audioToggleBtn">🔊 Audio ON</button>
+            <button id="historyBtn">📜 Trade History</button>
+        </div>
+        <div class="status" id="statusDisplay">⏸️ Auto trade OFF | Waiting for signal...</div>
+    </div>
+
+    <div class="card">
+        <h3>💰 Demo Trading Account</h3>
+        <div class="flex-row" style="justify-content:space-between;">
+            <div>Balance: <span id="balance">$10,000.00</span></div>
+            <div>P&L: <span id="totalPnl">$0.00</span></div>
+            <div>Trades: <span id="totalTrades">0</span></div>
+            <div>Win Rate: <span id="winRate">0%</span></div>
+        </div>
+        <div class="flex-row">
+            <label>Trade Amount ($):</label>
+            <input type="number" id="tradeAmount" value="100" style="background:#1A1F33; border:1px solid #3B82F6; border-radius:8px; padding:8px; color:white; width:120px;">
+            <label>Leverage:</label>
+            <select id="leverageSelect">
+                <option value="1">1X</option>
+                <option value="2">2X</option>
+                <option value="3">3X</option>
+                <option value="4">4X</option>
+                <option value="5" selected>5X</option>
+                <option value="6">6X</option>
+                <option value="7">7X</option>
+                <option value="8">8X</option>
+                <option value="9">9X</option>
+                <option value="10">10X</option>
+            </select>
+        </div>
+        <h4>Open Positions</h4>
+        <div id="openPositionsList">No open positions</div>
+    </div>
+</div>
+
+<script>
+    // ==================== USER DATA (LOCALSTORAGE PER USER) ====================
+    let currentUser = localStorage.getItem('autoBotUser') || 'default';
+    let usersData = JSON.parse(localStorage.getItem('autoBotUsersData')) || {};
+    if (!usersData[currentUser]) {
+        usersData[currentUser] = {
+            balance: 10000,
+            totalTrades: 0,
+            winTrades: 0,
+            totalProfit: 0,
+            positions: [],
+            tradeHistory: []
+        };
+        localStorage.setItem('autoBotUsersData', JSON.stringify(usersData));
+    }
+
+    function saveUserData() {
+        localStorage.setItem('autoBotUsersData', JSON.stringify(usersData));
+    }
+
+    function loadUserData() {
+        const data = usersData[currentUser];
+        document.getElementById('balance').innerText = '$' + data.balance.toFixed(2);
+        document.getElementById('totalTrades').innerText = data.totalTrades;
+        document.getElementById('totalPnl').innerText = (data.totalProfit >= 0 ? '+' : '') + '$' + data.totalProfit.toFixed(2);
+        const winRate = data.totalTrades > 0 ? (data.winTrades / data.totalTrades * 100).toFixed(1) : 0;
+        document.getElementById('winRate').innerText = winRate + '%';
+        updatePositionsDisplay(data.positions);
+    }
+
+    function updatePositionsDisplay(positions) {
+        const container = document.getElementById('openPositionsList');
+        if (!positions || positions.length === 0) {
+            container.innerHTML = 'No open positions';
+            return;
+        }
+        container.innerHTML = positions.map(p => `
+            <div style="background:#1A1F33; border-left:3px solid ${p.type==='buy'?'#22C55E':'#EF4444'}; padding:8px; margin-bottom:6px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>${p.type.toUpperCase()}</strong> ${p.amount} @ ${p.entryPrice} (${p.leverage}X)
+                    <div style="font-size:0.7rem; color:#94A3B8;">Current P&L: <span id="pnl_${p.id}">0.00</span></div>
+                </div>
+                <button onclick="closePosition(${p.id})" style="background:#EF4444; padding:4px 8px;">X</button>
+            </div>
+        `).join('');
+        // Update real-time P&L
+        updateAllPnL(positions);
+    }
+
+    function updateAllPnL(positions) {
+        if (!positions || positions.length === 0) return;
+        const price = currentPrice;
+        positions.forEach(p => {
+            const priceDiff = p.type === 'buy' ? (price - p.entryPrice) : (p.entryPrice - price);
+            const pnlPercent = priceDiff / p.entryPrice;
+            const pnl = pnlPercent * (p.amount * p.leverage);
+            const pnlElem = document.getElementById(`pnl_${p.id}`);
+            if (pnlElem) {
+                pnlElem.innerText = (pnl >= 0 ? '+' : '') + pnl.toFixed(2);
+                pnlElem.style.color = pnl >= 0 ? '#22C55E' : '#EF4444';
+            }
+        });
+    }
+
+    // ==================== TRADE EXECUTION ====================
+    let currentPrice = 67000; // will be updated from signal or fallback
+    let currentLeverage = 5;
+
+    function executeTrade(type) {
+        const amount = parseFloat(document.getElementById('tradeAmount').value) || 100;
+        const userData = usersData[currentUser];
+        if (amount > userData.balance) {
+            showNotification('Insufficient balance!', 'error');
+            return false;
+        }
+        if (userData.positions && userData.positions.length > 0) {
+            showNotification('Close existing position first!', 'warning');
+            return false;
+        }
+        const leverage = parseInt(document.getElementById('leverageSelect').value);
+        const positionSize = amount * leverage;
+        const position = {
+            id: Date.now(),
+            type: type,
+            amount: amount,
+            leverage: leverage,
+            positionSize: positionSize,
+            entryPrice: currentPrice,
+            timestamp: new Date().toISOString()
+        };
+        userData.positions.push(position);
+        userData.balance -= amount;
+        userData.totalTrades++;
+        saveUserData();
+        loadUserData();
+        showNotification(`${type.toUpperCase()} trade: $${amount} @ $${currentPrice.toFixed(2)} (${leverage}X)`, 'success');
+        speakMessage(type === 'buy' ? 'Right time open buy trade' : 'Right time open sell trade');
+        return true;
+    }
+
+    window.closePosition = function(id) {
+        const userData = usersData[currentUser];
+        const index = userData.positions.findIndex(p => p.id == id);
+        if (index === -1) return;
+        const pos = userData.positions[index];
+        const priceDiff = pos.type === 'buy' ? (currentPrice - pos.entryPrice) : (pos.entryPrice - currentPrice);
+        const pnlPercent = priceDiff / pos.entryPrice;
+        const pnl = pnlPercent * pos.positionSize;
+        userData.balance += pos.amount + pnl;
+        if (pnl > 0) userData.winTrades++;
+        userData.totalProfit += pnl;
+        // Add to history
+        const historyEntry = {
+            date: new Date().toLocaleString(),
+            type: pos.type,
+            entryPrice: pos.entryPrice,
+            exitPrice: currentPrice,
+            pnl: pnl,
+            pnlPercent: pnlPercent * 100,
+            amount: pos.amount,
+            leverage: pos.leverage
+        };
+        if (!userData.tradeHistory) userData.tradeHistory = [];
+        userData.tradeHistory.unshift(historyEntry);
+        if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
+        userData.positions.splice(index, 1);
+        saveUserData();
+        loadUserData();
+        showNotification(`Closed ${pos.type.toUpperCase()} | PnL: $${pnl.toFixed(2)}`, pnl >= 0 ? 'success' : 'error');
+        speakMessage('Right time close trade');
+    };
+
+    // ==================== AUTO CLOSE (TP/SL BASED ON TIMEFRAME) ====================
+    function getTPSLByTimeframe(tf) {
+        switch(tf) {
+            case '1m':  return { tp: 0.0025, sl: 0.0012 };
+            case '5m':  return { tp: 0.006,   sl: 0.003 };
+            case '15m': return { tp: 0.009,   sl: 0.0045 };
+            case '1h':  return { tp: 0.0135,  sl: 0.00675 };
+            case '4h':  return { tp: 0.02,    sl: 0.01 };
+            case '1D':  return { tp: 0.035,   sl: 0.0175 };
+            default:    return { tp: 0.006,   sl: 0.003 };
+        }
+    }
+
+    function autoClosePositions() {
+        const userData = usersData[currentUser];
+        if (!userData.positions || userData.positions.length === 0) return;
+        const timeframe = document.getElementById('timeframeSelect').value;
+        const { tp, sl } = getTPSLByTimeframe(timeframe);
+        let updated = false;
+        for (let i = 0; i < userData.positions.length; i++) {
+            const pos = userData.positions[i];
+            const priceDiff = pos.type === 'buy' ? (currentPrice - pos.entryPrice) : (pos.entryPrice - currentPrice);
+            const pnlPercent = priceDiff / pos.entryPrice;
+            if (pnlPercent >= tp || pnlPercent <= -sl) {
+                const pnl = pnlPercent * pos.positionSize;
+                userData.balance += pos.amount + pnl;
+                if (pnl > 0) userData.winTrades++;
+                userData.totalProfit += pnl;
+                const historyEntry = {
+                    date: new Date().toLocaleString(),
+                    type: pos.type,
+                    entryPrice: pos.entryPrice,
+                    exitPrice: currentPrice,
+                    pnl: pnl,
+                    pnlPercent: pnlPercent * 100,
+                    amount: pos.amount,
+                    leverage: pos.leverage
+                };
+                if (!userData.tradeHistory) userData.tradeHistory = [];
+                userData.tradeHistory.unshift(historyEntry);
+                if (userData.tradeHistory.length > 50) userData.tradeHistory.pop();
+                userData.positions.splice(i, 1);
+                updated = true;
+                i--;
+                showNotification(`Auto closed ${pos.type.toUpperCase()} | ${(pnlPercent*100).toFixed(1)}% | PnL: $${pnl.toFixed(2)}`, pnl >= 0 ? 'success' : 'info');
+                speakMessage('Right time close trade');
+            }
+        }
+        if (updated) {
+            saveUserData();
+            loadUserData();
+        }
+    }
+
+    // ==================== SIGNAL READING FROM localStorage ====================
+    let currentSignal = null;
+    let currentRSI = 50;
+
+    function readSignalFromLocalStorage() {
+        const signalData = localStorage.getItem('sharedSignal');
+        if (signalData) {
+            try {
+                const data = JSON.parse(signalData);
+                // Only use if recent (within 10 seconds)
+                if (Date.now() - data.timestamp < 10000) {
+                    currentSignal = data.finalSignal;
+                    currentRSI = data.rsi;
+                    if (data.price) currentPrice = data.price;
+                    document.getElementById('statusDisplay').innerHTML = `🟢 Signal: ${currentSignal || 'N/A'} | RSI: ${currentRSI.toFixed(1)} | Price: $${currentPrice.toFixed(2)}`;
+                    return;
+                }
+            } catch(e) {}
+        }
+        document.getElementById('statusDisplay').innerHTML = `⚠️ Waiting for signal from main website... (check sharedSignal in localStorage)`;
+    }
+
+    // Fallback: if no signal, we can still use manual test buttons
+    setInterval(readSignalFromLocalStorage, 2000);
+
+    // ==================== AUTO TRADING LOOP ====================
+    let autoEnabled = false;
+    let autoInterval = null;
+    let lastTradeTime = 0;
+    const COOLDOWN = 60000; // 1 minute
+
+    function checkAndTrade() {
+        autoClosePositions();
+        if (!autoEnabled) return;
+        if (!currentSignal) return;
+        const userData = usersData[currentUser];
+        if (userData.positions.length > 0) return;
+        if (Date.now() - lastTradeTime < COOLDOWN) return;
+
+        let action = null;
+        if (currentSignal === 'BUY' && currentRSI < 30) action = 'buy';
+        else if (currentSignal === 'SELL' && currentRSI > 70) action = 'sell';
+        if (!action) return;
+
+        const amount = 500; // fixed auto trade amount
+        const leverage = 5;
+        if (amount > userData.balance) return;
+        const position = {
+            id: Date.now(),
+            type: action,
+            amount: amount,
+            leverage: leverage,
+            positionSize: amount * leverage,
+            entryPrice: currentPrice,
+            timestamp: new Date().toISOString()
+        };
+        userData.positions.push(position);
+        userData.balance -= amount;
+        userData.totalTrades++;
+        saveUserData();
+        loadUserData();
+        lastTradeTime = Date.now();
+        showNotification(`🤖 AUTO ${action.toUpperCase()} | Signal:${currentSignal} | RSI:${currentRSI.toFixed(0)}`, 'success');
+        speakMessage(action === 'buy' ? 'Right time open buy trade' : 'Right time open sell trade');
+    }
+
+    function startAutoLoop() {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = setInterval(checkAndTrade, 10000);
+    }
+    function stopAutoLoop() {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = null;
+    }
+
+    // ==================== UI CONTROLS ====================
+    document.getElementById('startStopBtn').onclick = () => {
+        autoEnabled = !autoEnabled;
+        const btn = document.getElementById('startStopBtn');
+        if (autoEnabled) {
+            btn.textContent = '⏸️ Stop Auto Trading';
+            btn.classList.remove('btn-stop');
+            btn.style.background = '#EF4444';
+            startAutoLoop();
+            showNotification('Auto trading ENABLED', 'success');
+        } else {
+            btn.textContent = '🤖 Start Auto Trading';
+            btn.style.background = 'linear-gradient(135deg, #3B82F6, #8B5CF6)';
+            stopAutoLoop();
+            showNotification('Auto trading DISABLED', 'info');
+        }
+    };
+
+    document.getElementById('testBuyBtn').onclick = () => executeTrade('buy');
+    document.getElementById('testSellBtn').onclick = () => executeTrade('sell');
+    document.getElementById('leverageSelect').onchange = (e) => currentLeverage = parseInt(e.target.value);
+    document.getElementById('tradeAmount').addEventListener('input', () => {});
+
+    // Audio alerts
+    let audioEnabled = localStorage.getItem('audioAlertsEnabled') === 'true';
+    function speakMessage(message) {
+        if (!audioEnabled) return;
+        let count = 0;
+        function speak() {
+            if (!audioEnabled) return;
+            const utterance = new SpeechSynthesisUtterance(message);
+            utterance.rate = 0.7;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+            count++;
+            if (count < 5) setTimeout(speak, 1800);
+        }
+        speak();
+    }
+    const audioBtn = document.getElementById('audioToggleBtn');
+    audioBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF';
+    audioBtn.onclick = () => {
+        audioEnabled = !audioEnabled;
+        localStorage.setItem('audioAlertsEnabled', audioEnabled);
+        audioBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF';
+        showNotification(audioEnabled ? 'Audio alerts enabled' : 'Audio alerts disabled', 'info');
+    };
+
+    // Trade History Modal
+    function showTradeHistory() {
+        const history = usersData[currentUser].tradeHistory || [];
+        if (history.length === 0) { alert('No trade history'); return; }
+        let modalHtml = `<div id="historyModal" style="position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#0B0F1C; border:2px solid #3B82F6; border-radius:20px; padding:20px; z-index:10000; width:90%; max-width:800px; max-height:80%; overflow:auto;">
+            <div style="display:flex; justify-content:space-between;"><h3>Trade History</h3><button id="closeHist" style="background:#EF4444; border:none; color:white; border-radius:8px; padding:5px 15px;">Close</button></div>
+            <table style="width:100%;"><thead><tr><th>Date</th><th>Type</th><th>Entry</th><th>Exit</th><th>P&L</th></tr></thead><tbody>`;
+        history.forEach(t => {
+            const pnlColor = t.pnl >= 0 ? '#22C55E' : '#EF4444';
+            modalHtml += `<tr><td>${t.date}</td><td style="color:${t.type==='buy'?'#22C55E':'#EF4444'}">${t.type.toUpperCase()}</td><td>$${t.entryPrice.toFixed(2)}</td><td>$${t.exitPrice.toFixed(2)}</td><td style="color:${pnlColor}">$${t.pnl.toFixed(2)} (${t.pnlPercent.toFixed(1)}%)</td></tr>`;
+        });
+        modalHtml += `</tbody></table></div>`;
+        if (document.getElementById('historyModal')) document.getElementById('historyModal').remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        document.getElementById('closeHist').onclick = () => document.getElementById('historyModal').remove();
+    }
+    document.getElementById('historyBtn').onclick = showTradeHistory;
+
+    function showNotification(msg, type) {
+        const notif = document.createElement('div');
+        notif.className = `notification ${type}`;
+        notif.textContent = msg;
+        notif.style.position = 'fixed';
+        notif.style.top = '20px';
+        notif.style.right = '20px';
+        notif.style.padding = '12px 20px';
+        notif.style.borderRadius = '8px';
+        notif.style.background = type === 'success' ? '#22C55E' : type === 'error' ? '#EF4444' : '#3B82F6';
+        notif.style.color = 'white';
+        notif.style.zIndex = '10001';
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 3000);
+    }
+
+    // Initialize
+    loadUserData();
+    readSignalFromLocalStorage();
+    setInterval(() => {
+        if (usersData[currentUser].positions.length > 0) {
+            updateAllPnL(usersData[currentUser].positions);
+        }
+    }, 2000);
+</script>
+</body>
+</html>
